@@ -49,6 +49,9 @@ public class GameManager : MonoBehaviour
             DestroyImmediate(instance);
         else
             instance = this;
+
+        //DON'T FORGET TO DELETE
+        PlayerPrefs.DeleteAll();
     }
 
     //Just to set player ref
@@ -145,7 +148,14 @@ public class GameManager : MonoBehaviour
         m_EnnemiesKilled += 1;
 
         UpdateStepsToBoss();
-
+        
+        PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
+        Txt_StepsToBoss.text = (m_EnnemiesKilled+1).ToString() + "/10";
+        
+        PlayerPrefs.SetInt("StageNumber", m_StageNumber);
+        Txt_StageStep.text = m_StageNumber.ToString();
+        
+        PlayerPrefs.Save();
         MoveEnvironment();
 
         if (m_EnnemiesKilled % m_EnnemiesBeforeStage == 0)
@@ -153,16 +163,6 @@ public class GameManager : MonoBehaviour
             m_StageNumber += 1;
             Txt_StageStep.text = m_StageNumber.ToString();
         }
-        PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
-        Txt_StepsToBoss.text = m_EnnemiesKilled + "/10";
-        
-        m_StageNumber += 1;
-        
-        PlayerPrefs.SetInt("StageNumber", m_StageNumber);
-        Txt_StageStep.text = m_StageNumber.ToString();
-        
-        PlayerPrefs.Save();
-        MoveEnvironment();
     }
 
     //Mo$t important
