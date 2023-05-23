@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
     private float m_Speed = 0.5f, m_Attack, m_Armor = 1;
     [SerializeField] private GameObject m_EnvironnementPrefab;
     [SerializeField] private Transform m_ActualEnvironnement;
+    [SerializeField] private float moveEnvironmentSpeed = 0.25f;
 
     [Header("Upgrades")]
     [SerializeField] private float m_SpeedUpgrade;
@@ -84,7 +85,7 @@ public class GameManager : MonoBehaviour
          text.text = contenu;
     }
 
-    public void MoveEnvironnement()
+    public void MoveEnvironment()
     {
         float moveDist = 30;
 
@@ -92,7 +93,19 @@ public class GameManager : MonoBehaviour
         GameObject nextPart = Instantiate(m_EnvironnementPrefab, newPos, m_ActualEnvironnement.rotation);
 
 
+        StartCoroutine(MoveEnvironmentCoroutine(nextPart.transform));
+    }
 
+    private IEnumerator MoveEnvironmentCoroutine(Transform nextPart)
+    {
+        while (nextPart.position != Vector3.zero)
+        {
+            nextPart.position = new Vector3(0, 0, nextPart.position.z - moveEnvironmentSpeed);
+            m_ActualEnvironnement.position = new Vector3(0, 0, m_ActualEnvironnement.position.z - moveEnvironmentSpeed);
+            yield return null;
+        }
+        
+        Destroy(m_ActualEnvironnement.gameObject);
         m_ActualEnvironnement = nextPart.transform;
         b_IsEngagedInCombat = false;
     }
@@ -106,7 +119,7 @@ public class GameManager : MonoBehaviour
         Destroy(ennemy.gameObject);
         m_EnnemiesKilled += 1;
 
-        MoveEnvironnement();
+        MoveEnvironment();
         //m_StageNumber += 1;
     }
 
