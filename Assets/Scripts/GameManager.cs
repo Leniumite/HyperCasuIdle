@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.ComponentModel;
+using UnityEngine.Serialization;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class GameManager : MonoBehaviour
 
     [Header("General Variables")]
     private bool b_IsEngagedInCombat = false;
+    public bool b_canAttack = false;
     private int m_Money = 0, m_MoneyToUpgradeSpeed = 10, m_MoneyToUpgradeArmor = 10, m_MoneyToUpgradeAttack = 10, m_LvlSpeed = 1, m_LvlArmor = 1, m_LvlAttack = 1;
     private int m_StageNumber = 1, m_EnnemiesKilled = 0, m_EnnemiesBeforeStage = 10;
     private float m_Speed = 0.5f, m_Attack, m_Armor = 1;
@@ -37,6 +39,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Ennemies")]
     [SerializeField] private GameObject m_EnnemyPrefab;
+    [SerializeField] private GameObject m_BossPrefab;
     private Ennemy m_ActualEnnemy;
     [SerializeField] private Transform m_EnnemyPrefabPosition;
 
@@ -49,14 +52,34 @@ public class GameManager : MonoBehaviour
             DestroyImmediate(instance);
         else
             instance = this;
-
-        //DON'T FORGET TO DELETE
-        PlayerPrefs.DeleteAll();
     }
 
     //Just to set player ref
     private void Start()
     {
+        Init();
+    }
+
+    //Spawn ennemies one by one
+    private void Update()
+    {
+        Btn_Speed.interactable = m_Money >= m_MoneyToUpgradeSpeed ? true : false;
+        Btn_Armor.interactable = m_Money >= m_MoneyToUpgradeArmor ? true : false;
+        Btn_Attack.interactable = m_Money >= m_MoneyToUpgradeAttack ? true : false;
+
+        if (!b_IsEngagedInCombat)
+            SpawnEnnemy();
+
+        float healthRatio = m_ActualEnnemy.m_Health / m_ActualEnnemy.m_MaxHealth;
+        m_FillBar.transform.localScale = new Vector3(healthRatio, m_FillBar.transform.localScale.y, m_FillBar.transform.localScale.z);
+        Txt_EnemyLife.text = m_ActualEnnemy.m_Health.ToString();
+    }
+
+    private void Init()
+    {
+        Application.targetFrameRate = 60;
+        m_ActualEnvironnement = Instantiate(m_EnvironnementPrefab, Vector3.zero, Quaternion.identity).transform;
+
         if (!PlayerPrefs.HasKey("StepToBoss"))
         {
             PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
@@ -79,28 +102,14 @@ public class GameManager : MonoBehaviour
         }
         Txt_StageStep.text = m_StageNumber.ToString();
         
+        
         m_Attack = 1;
         m_Player = GameObject.Find("Player");
     }
-
-    //Spawn ennemies one by one
-    private void Update()
-    {
-        Btn_Speed.interactable = m_Money >= m_MoneyToUpgradeSpeed ? true : false;
-        Btn_Armor.interactable = m_Money >= m_MoneyToUpgradeArmor ? true : false;
-        Btn_Attack.interactable = m_Money >= m_MoneyToUpgradeAttack ? true : false;
-
-        if (!b_IsEngagedInCombat)
-            SpawnEnnemy();
-
-        float healthRatio = m_ActualEnnemy.m_Health / m_ActualEnnemy.m_MaxHealth;
-        m_FillBar.transform.localScale = new Vector3(healthRatio, m_FillBar.transform.localScale.y, m_FillBar.transform.localScale.z);
-        Txt_EnemyLife.text = m_ActualEnnemy.m_Health.ToString();
-    }
-
+    
     //Spawn ennemies with a simple prefab and set all the variables depending the stage we are in
     private void SpawnEnnemy()
-    {
+    { 
         GameObject ennemy = Instantiate(m_EnnemyPrefab, m_EnnemyPrefabPosition.position, m_EnnemyPrefabPosition.rotation);
         Ennemy comp = ennemy.GetComponent<Ennemy>();
         m_ActualEnnemy = comp;
@@ -109,6 +118,7 @@ public class GameManager : MonoBehaviour
         comp.SetRewards(Random.Range(2,10) * m_StageNumber);
 
         b_IsEngagedInCombat = true;
+        b_canAttack = false;
     }
 
     //Update the specified button
@@ -117,7 +127,7 @@ public class GameManager : MonoBehaviour
          text.text = contenu;
     }
 
-    public void MoveEnvironment()
+    private void MoveEnvironment()
     {
         Vector3 newPos = new Vector3(m_ActualEnvironnement.position.x, m_ActualEnvironnement.position.y, m_ActualEnvironnement.position.z + 30);
         GameObject nextPart = Instantiate(m_EnvironnementPrefab, newPos, m_ActualEnvironnement.rotation);
@@ -142,6 +152,7 @@ public class GameManager : MonoBehaviour
     //All these deaths increments several counters to knoww where the player is in the progression
     public void EnnemyDeath(Ennemy ennemy)
     {
+        b_canAttack = true;
         m_Money += ennemy.m_Rewards;
         UpdateMoney();
         Destroy(ennemy.gameObject);
@@ -152,17 +163,16 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
         Txt_StepsToBoss.text = (m_EnnemiesKilled+1).ToString() + "/10";
         
-        PlayerPrefs.SetInt("StageNumber", m_StageNumber);
-        Txt_StageStep.text = m_StageNumber.ToString();
-        
-        PlayerPrefs.Save();
         MoveEnvironment();
 
         if (m_EnnemiesKilled % m_EnnemiesBeforeStage == 0)
         {
             m_StageNumber += 1;
+            
+            PlayerPrefs.SetInt("StageNumber", m_StageNumber);
             Txt_StageStep.text = m_StageNumber.ToString();
         }
+        PlayerPrefs.Save();
     }
 
     //Mo$t important

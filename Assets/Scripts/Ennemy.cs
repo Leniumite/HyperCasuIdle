@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Ennemy : MonoBehaviour
 {
@@ -13,11 +15,19 @@ public class Ennemy : MonoBehaviour
     public int m_Armor;
     public int m_Rewards;
 
+    private void Start()
+    {
+        var test = GetComponent<MeshRenderer>();
+        test.material.color = Random.ColorHSV();
+    }
+
     private void Update()
     {
-        if (m_Health <= 0)
-            GameManager.instance.EnnemyDeath(this);
+        if (m_Health <= 0) GameManager.instance.EnnemyDeath(this);
+    }
 
+    private void LateUpdate()
+    {
         Turn();
     }
 
