@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI Txt_Armor;
     [SerializeField] private TextMeshProUGUI Txt_Attack;
     [SerializeField] private TextMeshProUGUI Txt_MoneyText;
+    [SerializeField] private TextMeshProUGUI Txt_StageStep;
 
     [SerializeField] private Button Btn_Speed;
     [SerializeField] private Button Btn_Armor;
@@ -92,7 +93,7 @@ public class GameManager : MonoBehaviour
         Vector3 newPos = new Vector3(m_ActualEnvironnement.position.x, m_ActualEnvironnement.position.y, m_ActualEnvironnement.position.z + 30);
         GameObject nextPart = Instantiate(m_EnvironnementPrefab, newPos, m_ActualEnvironnement.rotation);
 
-
+        Txt_StageStep.text = m_StageNumber.ToString();
         StartCoroutine(MoveEnvironmentCoroutine(nextPart.transform));
     }
 
