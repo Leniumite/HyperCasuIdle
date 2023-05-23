@@ -11,9 +11,11 @@ public class GameManager : MonoBehaviour
 
     [Header("General Variables")]
     private bool b_IsEngagedInCombat = false;
-    private int m_Money = 0, m_MoneyToUpgradeSpeed = 100, m_MoneyToUpgradeArmor = 100, m_MoneyToUpgradeAttack = 100, m_LvlSpeed = 1, m_LvlArmor = 1, m_LvlAttack = 1;
+    private int m_Money = 0, m_MoneyToUpgradeSpeed = 10, m_MoneyToUpgradeArmor = 10, m_MoneyToUpgradeAttack = 10, m_LvlSpeed = 1, m_LvlArmor = 1, m_LvlAttack = 1;
     private int m_StageNumber = 1, m_EnnemiesKilled = 0;
-    private float m_Speed = 1, m_Attack, m_Armor = 1;
+    private float m_Speed = 0.5f, m_Attack, m_Armor = 1;
+    [SerializeField] private GameObject m_EnvironnementPrefab;
+    [SerializeField] private Transform m_ActualEnvironnement;
 
     [Header("Upgrades")]
     [SerializeField] private float m_SpeedUpgrade;
@@ -22,6 +24,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI Txt_Armor;
     [SerializeField] private TextMeshProUGUI Txt_Attack;
     [SerializeField] private TextMeshProUGUI Txt_MoneyText;
+
+    [SerializeField] private Button Btn_Speed;
+    [SerializeField] private Button Btn_Armor;
+    [SerializeField] private Button Btn_Attack;
 
     [Header("Ennemies")]
     [SerializeField] private GameObject m_EnnemyPrefab;
@@ -43,12 +49,16 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         m_Attack = 1;
-        m_Player = GameObject.Find("MainToupie");
+        m_Player = GameObject.Find("Player");
     }
 
     //Spawn ennemies one by one
     private void Update()
     {
+        Btn_Speed.interactable = m_Money >= m_MoneyToUpgradeSpeed ? true : false;
+        Btn_Armor.interactable = m_Money >= m_MoneyToUpgradeArmor ? true : false;
+        Btn_Attack.interactable = m_Money >= m_MoneyToUpgradeAttack ? true : false;
+
         if (b_IsEngagedInCombat)
             return;
 
@@ -74,6 +84,20 @@ public class GameManager : MonoBehaviour
          text.text = contenu;
     }
 
+    public void MoveEnvironnement()
+    {
+        float moveDist = 30;
+
+        Vector3 newPos = new Vector3(m_ActualEnvironnement.position.x, m_ActualEnvironnement.position.y, m_ActualEnvironnement.position.z + 30);
+        GameObject nextPart = Instantiate(m_EnvironnementPrefab, newPos, m_ActualEnvironnement.rotation);
+
+
+
+        m_ActualEnvironnement = nextPart.transform;
+        b_IsEngagedInCombat = false;
+    }
+
+    //All these deaths increments several counters to knoww where the player is in the progression
     public void EnnemyDeath(Ennemy ennemy)
     {
         Debug.Log("Dead");
@@ -81,11 +105,12 @@ public class GameManager : MonoBehaviour
         UpdateMoney();
         Destroy(ennemy.gameObject);
         m_EnnemiesKilled += 1;
-        m_StageNumber += 1;
 
-        b_IsEngagedInCombat = false;
+        MoveEnvironnement();
+        //m_StageNumber += 1;
     }
 
+    //Mo$t important
     public void UpdateMoney()
     {
         Txt_MoneyText.text = m_Money.ToString();
@@ -103,7 +128,9 @@ public class GameManager : MonoBehaviour
     {
         m_Speed += m_SpeedUpgrade;
         m_LvlSpeed++;
+        m_Money -= m_MoneyToUpgradeSpeed;
 
+        UpdateMoney();
         UpdateButton(Txt_Speed, m_LvlSpeed.ToString() + "\nSpeed\n" + m_MoneyToUpgradeSpeed.ToString());
     }
 
@@ -111,7 +138,9 @@ public class GameManager : MonoBehaviour
     {
         m_Armor += Mathf.CeilToInt(m_Armor / 10);
         m_LvlArmor++;
+        m_Money -= m_MoneyToUpgradeArmor;
 
+        UpdateMoney();
         UpdateButton(Txt_Armor, m_LvlArmor.ToString() + "\nArmor\n" + m_MoneyToUpgradeArmor.ToString());
     }
 
@@ -119,9 +148,14 @@ public class GameManager : MonoBehaviour
     {
         m_Attack += Mathf.CeilToInt(m_Attack / 10);
         m_LvlAttack++;
+        m_Money -= m_MoneyToUpgradeAttack;
 
+        UpdateMoney();
         UpdateButton(Txt_Attack, m_LvlAttack.ToString() + "\nAttack\n" + m_MoneyToUpgradeAttack.ToString());
     }
 
-    
+    public float GetSpeed()
+    {
+        return m_Speed;
+    }
 }

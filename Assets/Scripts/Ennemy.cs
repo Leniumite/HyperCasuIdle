@@ -16,11 +16,13 @@ public class Ennemy : MonoBehaviour
     {
         if (m_Health <= 0)
             GameManager.instance.EnnemyDeath(this);
+
+        Turn();
     }
 
-    private void Attack(int dmg)
+    public void Turn()
     {
-
+        transform.Rotate(new Vector3(0, 0, 0.8f));
     }
 
     public void TakeDmg(float dmg)
