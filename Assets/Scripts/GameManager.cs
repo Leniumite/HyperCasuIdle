@@ -54,6 +54,28 @@ public class GameManager : MonoBehaviour
     //Just to set player ref
     private void Start()
     {
+        if (!PlayerPrefs.HasKey("StepToBoss"))
+        {
+            PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_EnnemiesKilled = PlayerPrefs.GetInt("StepToBoss");
+        }
+        Txt_StepToBoss.text = m_EnnemiesKilled + "/10";
+        
+        if (!PlayerPrefs.HasKey("StageNumber"))
+        {
+            PlayerPrefs.SetInt("StageNumber", m_StageNumber);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_StageNumber = PlayerPrefs.GetInt("StageNumber");
+        }
+        Txt_StageStep.text = m_StageNumber.ToString();
+        
         m_Attack = 1;
         m_Player = GameObject.Find("Player");
     }
@@ -121,6 +143,7 @@ public class GameManager : MonoBehaviour
         UpdateMoney();
         Destroy(ennemy.gameObject);
         m_EnnemiesKilled += 1;
+
         UpdateStepsToBoss();
 
         MoveEnvironment();
@@ -130,6 +153,16 @@ public class GameManager : MonoBehaviour
             m_StageNumber += 1;
             Txt_StageStep.text = m_StageNumber.ToString();
         }
+        PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
+        Txt_StepToBoss.text = m_EnnemiesKilled + "/10";
+        
+        m_StageNumber += 1;
+        
+        PlayerPrefs.SetInt("StageNumber", m_StageNumber);
+        Txt_StageStep.text = m_StageNumber.ToString();
+        
+        PlayerPrefs.Save();
+        MoveEnvironment();
     }
 
     //Mo$t important
