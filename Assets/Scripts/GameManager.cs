@@ -63,7 +63,7 @@ public class GameManager : MonoBehaviour
         {
             m_EnnemiesKilled = PlayerPrefs.GetInt("StepToBoss");
         }
-        Txt_StepToBoss.text = m_EnnemiesKilled + "/10";
+        Txt_StepsToBoss.text = m_EnnemiesKilled + "/10";
         
         if (!PlayerPrefs.HasKey("StageNumber"))
         {
@@ -154,7 +154,7 @@ public class GameManager : MonoBehaviour
             Txt_StageStep.text = m_StageNumber.ToString();
         }
         PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
-        Txt_StepToBoss.text = m_EnnemiesKilled + "/10";
+        Txt_StepsToBoss.text = m_EnnemiesKilled + "/10";
         
         m_StageNumber += 1;
         
