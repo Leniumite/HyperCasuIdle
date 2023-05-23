@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI Txt_Speed;
     [SerializeField] private TextMeshProUGUI Txt_Armor;
     [SerializeField] private TextMeshProUGUI Txt_Attack;
+    [SerializeField] private TextMeshProUGUI Txt_MoneyText;
 
     [Header("Ennemies")]
     [SerializeField] private GameObject m_EnnemyPrefab;
@@ -57,7 +58,7 @@ public class GameManager : MonoBehaviour
     //Spawn ennemies with a simple prefab and set all the variables depending the stage we are in
     private void SpawnEnnemy()
     {
-        GameObject ennemy = Instantiate(m_EnnemyPrefab, m_EnnemyPrefabPosition.position, Quaternion.identity);
+        GameObject ennemy = Instantiate(m_EnnemyPrefab, m_EnnemyPrefabPosition.position, m_EnnemyPrefabPosition.rotation);
         m_ActualEnnemy = ennemy;
         Ennemy comp = ennemy.GetComponent<Ennemy>();
         comp.SetHealth(10 * (m_StageNumber * m_StageNumber));
@@ -77,11 +78,17 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Dead");
         m_Money += ennemy.m_Rewards;
+        UpdateMoney();
         Destroy(ennemy.gameObject);
         m_EnnemiesKilled += 1;
         m_StageNumber += 1;
 
         b_IsEngagedInCombat = false;
+    }
+
+    public void UpdateMoney()
+    {
+        Txt_MoneyText.text = m_Money.ToString();
     }
 
     //Called every seconds to hit ennemy
@@ -90,11 +97,6 @@ public class GameManager : MonoBehaviour
         Debug.Log(m_Attack);
         
         m_ActualEnnemy.GetComponent<Ennemy>().TakeDmg(m_Attack);
-    }
-
-    public void GetRewards()
-    {
-
     }
 
     public void UpgradeSpeed()
