@@ -14,8 +14,11 @@ public class Player : MonoBehaviour
         if (m_Timer <= 0)
         {
             GameManager.instance.DamageEnnemy();
-            m_Timer = m_TimerReset/GameManager.instance.GetSpeed();
+            m_Timer = m_TimerReset / GameManager.instance.GetSpeed();
         }
+
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+            GameManager.instance.DamageEnnemy();  
 
         Turn();
     }

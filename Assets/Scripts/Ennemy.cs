@@ -8,6 +8,7 @@ public class Ennemy : MonoBehaviour
     private float m_Cooldown;
 
     public bool b_Boss;
+    public float m_MaxHealth;
     public float m_Health;
     public int m_Armor;
     public int m_Rewards;
@@ -32,6 +33,7 @@ public class Ennemy : MonoBehaviour
 
     public void SetHealth(int health)
     {
+        m_MaxHealth = health;
         m_Health = health;
     }
 

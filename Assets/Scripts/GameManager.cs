@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
     [Header("General Variables")]
     private bool b_IsEngagedInCombat = false;
     private int m_Money = 0, m_MoneyToUpgradeSpeed = 10, m_MoneyToUpgradeArmor = 10, m_MoneyToUpgradeAttack = 10, m_LvlSpeed = 1, m_LvlArmor = 1, m_LvlAttack = 1;
-    private int m_StageNumber = 1, m_EnnemiesKilled = 0;
+    private int m_StageNumber = 1, m_EnnemiesKilled = 0, m_EnnemiesBeforeStage = 10;
     private float m_Speed = 0.5f, m_Attack, m_Armor = 1;
     [SerializeField] private GameObject m_EnvironnementPrefab;
     [SerializeField] private Transform m_ActualEnvironnement;
@@ -21,19 +21,23 @@ public class GameManager : MonoBehaviour
     [Header("Upgrades")]
     [SerializeField] private float m_SpeedUpgrade;
 
+    [SerializeField] private Button Btn_Speed;
+    [SerializeField] private Button Btn_Armor;
+    [SerializeField] private Button Btn_Attack;
+
+    [Header("UI")]
     [SerializeField] private TextMeshProUGUI Txt_Speed;
     [SerializeField] private TextMeshProUGUI Txt_Armor;
     [SerializeField] private TextMeshProUGUI Txt_Attack;
     [SerializeField] private TextMeshProUGUI Txt_MoneyText;
     [SerializeField] private TextMeshProUGUI Txt_StageStep;
-
-    [SerializeField] private Button Btn_Speed;
-    [SerializeField] private Button Btn_Armor;
-    [SerializeField] private Button Btn_Attack;
+    [SerializeField] private TextMeshProUGUI Txt_StepsToBoss;
+    [SerializeField] private TextMeshProUGUI Txt_EnemyLife;
+    [SerializeField] private GameObject m_FillBar;
 
     [Header("Ennemies")]
     [SerializeField] private GameObject m_EnnemyPrefab;
-    private GameObject m_ActualEnnemy;
+    private Ennemy m_ActualEnnemy;
     [SerializeField] private Transform m_EnnemyPrefabPosition;
 
     public GameObject m_Player;
@@ -61,18 +65,20 @@ public class GameManager : MonoBehaviour
         Btn_Armor.interactable = m_Money >= m_MoneyToUpgradeArmor ? true : false;
         Btn_Attack.interactable = m_Money >= m_MoneyToUpgradeAttack ? true : false;
 
-        if (b_IsEngagedInCombat)
-            return;
+        if (!b_IsEngagedInCombat)
+            SpawnEnnemy();
 
-        SpawnEnnemy();
+        float healthRatio = m_ActualEnnemy.m_Health / m_ActualEnnemy.m_MaxHealth;
+        m_FillBar.transform.localScale = new Vector3(healthRatio, m_FillBar.transform.localScale.y, m_FillBar.transform.localScale.z);
+        Txt_EnemyLife.text = m_ActualEnnemy.m_Health.ToString();
     }
 
     //Spawn ennemies with a simple prefab and set all the variables depending the stage we are in
     private void SpawnEnnemy()
     {
         GameObject ennemy = Instantiate(m_EnnemyPrefab, m_EnnemyPrefabPosition.position, m_EnnemyPrefabPosition.rotation);
-        m_ActualEnnemy = ennemy;
         Ennemy comp = ennemy.GetComponent<Ennemy>();
+        m_ActualEnnemy = comp;
         comp.SetHealth(10 * (m_StageNumber * m_StageNumber));
         comp.SetArmor(Mathf.FloorToInt(m_StageNumber * 1.2f));
         comp.SetRewards(Random.Range(2,10) * m_StageNumber);
@@ -88,12 +94,9 @@ public class GameManager : MonoBehaviour
 
     public void MoveEnvironment()
     {
-        float moveDist = 30;
-
         Vector3 newPos = new Vector3(m_ActualEnvironnement.position.x, m_ActualEnvironnement.position.y, m_ActualEnvironnement.position.z + 30);
         GameObject nextPart = Instantiate(m_EnvironnementPrefab, newPos, m_ActualEnvironnement.rotation);
 
-        Txt_StageStep.text = m_StageNumber.ToString();
         StartCoroutine(MoveEnvironmentCoroutine(nextPart.transform));
     }
 
@@ -114,14 +117,19 @@ public class GameManager : MonoBehaviour
     //All these deaths increments several counters to knoww where the player is in the progression
     public void EnnemyDeath(Ennemy ennemy)
     {
-        Debug.Log("Dead");
         m_Money += ennemy.m_Rewards;
         UpdateMoney();
         Destroy(ennemy.gameObject);
         m_EnnemiesKilled += 1;
+        UpdateStepsToBoss();
 
         MoveEnvironment();
-        //m_StageNumber += 1;
+
+        if (m_EnnemiesKilled % m_EnnemiesBeforeStage == 0)
+        {
+            m_StageNumber += 1;
+            Txt_StageStep.text = m_StageNumber.ToString();
+        }
     }
 
     //Mo$t important
@@ -130,12 +138,15 @@ public class GameManager : MonoBehaviour
         Txt_MoneyText.text = m_Money.ToString();
     }
 
+    public void UpdateStepsToBoss()
+    {
+        Txt_StepsToBoss.text = (1+(m_EnnemiesKilled % m_EnnemiesBeforeStage)).ToString() + "/10";
+    }
+
     //Called every seconds to hit ennemy
     public void DamageEnnemy()
-    {
-        Debug.Log(m_Attack);
-        
-        m_ActualEnnemy.GetComponent<Ennemy>().TakeDmg(m_Attack);
+    {        
+        m_ActualEnnemy.TakeDmg(m_Attack);
     }
 
     public void UpgradeSpeed()
