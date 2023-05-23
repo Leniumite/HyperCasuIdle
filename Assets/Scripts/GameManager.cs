@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.ComponentModel;
+using DG.Tweening;
 using UnityEngine.Serialization;
 
 public class GameManager : MonoBehaviour
@@ -19,6 +20,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject m_EnvironnementPrefab;
     [SerializeField] private Transform m_ActualEnvironnement;
     [SerializeField] private float moveEnvironmentSpeed = 0.25f;
+
+    private Tweener m_enemyPunchTween;
+    private Tweener m_playerPunchTween;
+    [SerializeField] private float rangePunchPosition = 0.25f;
 
     [Header("Upgrades")]
     [SerializeField] private float m_SpeedUpgrade;
@@ -53,7 +58,7 @@ public class GameManager : MonoBehaviour
     private Ennemy m_ActualEnnemy;
     [SerializeField] private Transform m_EnnemyPrefabPosition;
 
-    public GameObject m_Player;
+    public Player m_Player;
 
     //Singleton
     private void Awake()
@@ -80,7 +85,7 @@ public class GameManager : MonoBehaviour
         if (!b_IsEngagedInCombat)
             SpawnEnnemy();
 
-        float healthRatio = m_ActualEnnemy.m_Health / m_ActualEnnemy.m_MaxHealth;
+        float healthRatio = Mathf.Max(0, m_ActualEnnemy.m_Health / m_ActualEnnemy.m_MaxHealth);
         m_FillBar.transform.localScale = new Vector3(healthRatio, m_FillBar.transform.localScale.y, m_FillBar.transform.localScale.z);
         Txt_EnemyLife.text = m_ActualEnnemy.m_Health.ToString();
     }
@@ -128,7 +133,7 @@ public class GameManager : MonoBehaviour
         InitPlayerPrefArmor();
         InitPlayerPrefAttack();
         
-        m_Player = GameObject.Find("Player");
+        m_Player = GameObject.Find("Player").GetComponent<Player>();
     }
 
     #region PlayerPrefs
@@ -351,7 +356,11 @@ public class GameManager : MonoBehaviour
     //Called every seconds to hit ennemy
     public void DamageEnnemy()
     {        
+        //m_Player.transform.do
         m_ActualEnnemy.TakeDmg(m_Attack);
+        
+        m_enemyPunchTween.Complete();
+        m_enemyPunchTween = m_ActualEnnemy.transform.DOPunchPosition(new Vector3(Random.Range(-rangePunchPosition, rangePunchPosition), m_ActualEnnemy.transform.position.y, Random.Range(-rangePunchPosition, rangePunchPosition)), 0.5f, 5);
     }
 
     public void UpgradeSpeed()
@@ -359,7 +368,8 @@ public class GameManager : MonoBehaviour
         m_Speed += m_SpeedUpgrade;
         m_LvlSpeed++;
         m_Money -= m_MoneyToUpgradeSpeed;
-
+        m_Player.upgradeParticle.gameObject.SetActive(true);
+        m_Player.upgradeParticle.Play();
         SavePlayerPrefSpeed();
         UpdateMoney();
         UpdateButton(Txt_SpeedLvl,  "Lvl : " + m_LvlSpeed);
@@ -371,7 +381,8 @@ public class GameManager : MonoBehaviour
         m_Armor += Mathf.CeilToInt(m_Armor / 10);
         m_LvlArmor++;
         m_Money -= m_MoneyToUpgradeArmor;
-
+        m_Player.upgradeParticle.gameObject.SetActive(true);
+        m_Player.upgradeParticle.Play();
         SavePlayerPrefArmor();
         UpdateMoney();
         UpdateButton(Txt_ArmorLvl,  "Lvl : " + m_LvlArmor);
@@ -384,6 +395,8 @@ public class GameManager : MonoBehaviour
         m_LvlAttack++;
         m_Money -= m_MoneyToUpgradeAttack;
 
+        m_Player.upgradeParticle.gameObject.SetActive(true);
+        m_Player.upgradeParticle.Play();
         SavePlayerPrefAttack();
         UpdateMoney();
         UpdateButton(Txt_AttackLvl,  "Lvl : " + m_LvlAttack);

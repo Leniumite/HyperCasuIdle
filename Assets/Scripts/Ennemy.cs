@@ -23,7 +23,11 @@ public class Ennemy : MonoBehaviour
 
     private void Update()
     {
-        if (m_Health <= 0) GameManager.instance.EnnemyDeath(this);
+        if (m_Health <= 0)
+        {
+            m_Health = 0;
+            GameManager.instance.EnnemyDeath(this);
+        }
     }
 
     private void LateUpdate()
@@ -38,6 +42,7 @@ public class Ennemy : MonoBehaviour
 
     public void TakeDmg(float dmg)
     {
+        if (m_Health <= 0) return;
         m_Health -= dmg;
     }
 

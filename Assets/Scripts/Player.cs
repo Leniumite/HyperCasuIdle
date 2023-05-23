@@ -7,7 +7,8 @@ public class Player : MonoBehaviour
 {
     private float m_Timer = 1;
     private float m_TimerReset = 1;
-
+    public ParticleSystem upgradeParticle;
+    
     private void Update()
     {
         m_Timer -= Time.deltaTime;
