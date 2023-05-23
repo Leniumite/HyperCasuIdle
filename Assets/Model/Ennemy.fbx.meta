@@ -3,7 +3,12 @@ guid: 6ae6bc21769e3184b8b93c71b984db38
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Spiner
+    second: {fileID: 2100000, guid: 1b1af582b5c393746a6cae973ad26ec7, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
