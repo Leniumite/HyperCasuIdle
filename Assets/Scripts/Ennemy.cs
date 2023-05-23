@@ -8,22 +8,14 @@ public class Ennemy : MonoBehaviour
     private float m_Cooldown;
 
     public bool b_Boss;
-    public int m_Attack;
+    public float m_Health;
     public int m_Armor;
     public int m_Rewards;
 
     private void Update()
     {
-        if (b_Boss)
-        {
-            m_Cooldown -= Time.deltaTime;
-
-            if (m_Cooldown <= 0)
-            {
-                Attack(m_Attack);
-                m_Cooldown = m_AttackCooldown;
-            }
-        }
+        if (m_Health <= 0)
+            GameManager.instance.EnnemyDeath(this);
     }
 
     private void Attack(int dmg)
@@ -31,14 +23,14 @@ public class Ennemy : MonoBehaviour
 
     }
 
-    public void TakeDmg(int dmg)
-    { 
-
+    public void TakeDmg(float dmg)
+    {
+        m_Health -= dmg;
     }
 
-    public void SetAttack(int attack)
+    public void SetHealth(int health)
     {
-        m_Attack = attack;
+        m_Health = health;
     }
 
     public void SetArmor(int armor)
