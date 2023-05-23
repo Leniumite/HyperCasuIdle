@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
     public bool b_canAttack = false;
     private int m_Money = 0, m_MoneyToUpgradeSpeed = 10, m_MoneyToUpgradeArmor = 10, m_MoneyToUpgradeAttack = 10, m_LvlSpeed = 1, m_LvlArmor = 1, m_LvlAttack = 1;
     private int m_StageNumber = 1, m_EnnemiesKilled = 0, m_EnnemiesBeforeStage = 10;
-    private float m_Speed = 0.5f, m_Attack, m_Armor = 1;
+    private float m_Speed = 0.5f, m_Attack = 1, m_Armor = 1;
     [SerializeField] private GameObject m_EnvironnementPrefab;
     [SerializeField] private Transform m_ActualEnvironnement;
     [SerializeField] private float moveEnvironmentSpeed = 0.25f;
@@ -28,9 +28,19 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Button Btn_Attack;
 
     [Header("UI")]
+    [Header("Speed")]
     [SerializeField] private TextMeshProUGUI Txt_Speed;
+    [SerializeField] private TextMeshProUGUI Txt_SpeedLvl;
+    [SerializeField] private TextMeshProUGUI Txt_SpeedCost;
+    [Header("Armor")]
     [SerializeField] private TextMeshProUGUI Txt_Armor;
+    [SerializeField] private TextMeshProUGUI Txt_ArmorLvl;
+    [SerializeField] private TextMeshProUGUI Txt_ArmorCost;
+    [Header("Attack")]
     [SerializeField] private TextMeshProUGUI Txt_Attack;
+    [SerializeField] private TextMeshProUGUI Txt_AttackLvl;
+    [SerializeField] private TextMeshProUGUI Txt_AttackCost;
+    [Space]
     [SerializeField] private TextMeshProUGUI Txt_MoneyText;
     [SerializeField] private TextMeshProUGUI Txt_StageStep;
     [SerializeField] private TextMeshProUGUI Txt_StepsToBoss;
@@ -101,12 +111,162 @@ public class GameManager : MonoBehaviour
             m_StageNumber = PlayerPrefs.GetInt("StageNumber");
         }
         Txt_StageStep.text = m_StageNumber.ToString();
+
+        if (!PlayerPrefs.HasKey("Money"))
+        {
+            PlayerPrefs.SetInt("Money", m_Money);
+            PlayerPrefs.Save();
+
+        }
+        else
+        {
+            m_Money = PlayerPrefs.GetInt("Money");
+        }
+        Txt_MoneyText.text = m_Money.ToString();
+
+        InitPlayerPrefSpeed();
+        InitPlayerPrefArmor();
+        InitPlayerPrefAttack();
         
-        
-        m_Attack = 1;
         m_Player = GameObject.Find("Player");
     }
+
+    #region PlayerPrefs
     
+    private void InitPlayerPrefSpeed()
+    {
+        if (!PlayerPrefs.HasKey("Speed"))
+        {
+            PlayerPrefs.SetFloat("Speed", m_LvlSpeed);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_Speed = PlayerPrefs.GetFloat("Speed");
+        }
+        
+        if (!PlayerPrefs.HasKey("SpeedLvl"))
+        {
+            PlayerPrefs.SetInt("SpeedLvl", m_LvlSpeed);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_LvlSpeed = PlayerPrefs.GetInt("SpeedLvl");
+        }
+        
+        if (!PlayerPrefs.HasKey("SpeedCost"))
+        {
+            PlayerPrefs.SetInt("SpeedCost", m_MoneyToUpgradeSpeed);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_MoneyToUpgradeSpeed = PlayerPrefs.GetInt("SpeedCost");
+        }
+        
+        UpdateButton(Txt_SpeedLvl,  "Lvl : " + m_LvlSpeed);
+        UpdateButton(Txt_SpeedCost, m_MoneyToUpgradeSpeed + " $");
+    }
+    
+    private void InitPlayerPrefArmor()
+    {
+        if (!PlayerPrefs.HasKey("Armor"))
+        {
+            PlayerPrefs.SetFloat("Armor", m_Armor);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_Armor = PlayerPrefs.GetFloat("Armor");
+        }
+        
+        if (!PlayerPrefs.HasKey("ArmorLvl"))
+        {
+            PlayerPrefs.SetInt("ArmorLvl", m_LvlArmor);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_LvlArmor = PlayerPrefs.GetInt("ArmorLvl");
+        }
+        
+        if (!PlayerPrefs.HasKey("ArmorCost"))
+        {
+            PlayerPrefs.SetInt("ArmorCost", m_MoneyToUpgradeArmor);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_MoneyToUpgradeArmor = PlayerPrefs.GetInt("ArmorCost");
+        }
+        
+        UpdateButton(Txt_ArmorLvl,  "Lvl : " + m_LvlArmor);
+        UpdateButton(Txt_ArmorCost, m_MoneyToUpgradeArmor + " $");
+    }
+    
+    private void InitPlayerPrefAttack()
+    {
+        if (!PlayerPrefs.HasKey("Attack"))
+        {
+            PlayerPrefs.SetFloat("Attack", m_Attack);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_Attack = PlayerPrefs.GetFloat("Attack");
+        }
+        
+        if (!PlayerPrefs.HasKey("AttackLvl"))
+        {
+            PlayerPrefs.SetInt("AttackLvl", m_LvlAttack);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_LvlAttack = PlayerPrefs.GetInt("AttackLvl");
+        }
+        
+        if (!PlayerPrefs.HasKey("AttackCost"))
+        {
+            PlayerPrefs.SetInt("AttackCost", m_MoneyToUpgradeAttack);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_MoneyToUpgradeAttack = PlayerPrefs.GetInt("AttackCost");
+        }
+        
+        UpdateButton(Txt_AttackLvl,  "Lvl : " + m_LvlAttack);
+        UpdateButton(Txt_AttackCost, m_MoneyToUpgradeAttack + " $");
+    }
+
+    private void SavePlayerPrefSpeed()
+    {
+        PlayerPrefs.SetFloat("Speed", m_LvlSpeed);
+        PlayerPrefs.SetInt("SpeedLvl", m_LvlSpeed);
+        PlayerPrefs.SetInt("SpeedCost", m_MoneyToUpgradeSpeed);
+        PlayerPrefs.Save();
+    }
+    
+    private void SavePlayerPrefArmor()
+    {
+        PlayerPrefs.SetFloat("Armor", m_Armor);
+        PlayerPrefs.SetInt("ArmorLvl", m_LvlArmor);
+        PlayerPrefs.SetInt("ArmorCost", m_MoneyToUpgradeArmor);
+        PlayerPrefs.Save();
+    }
+    
+    private void SavePlayerPrefAttack()
+    {
+        PlayerPrefs.SetFloat("Attack", m_Attack);
+        PlayerPrefs.SetInt("AttackLvl", m_LvlAttack);
+        PlayerPrefs.SetInt("AttackCost", m_MoneyToUpgradeAttack);
+        PlayerPrefs.Save();
+    }
+    
+    #endregion
+
     //Spawn ennemies with a simple prefab and set all the variables depending the stage we are in
     private void SpawnEnnemy()
     { 
@@ -178,6 +338,8 @@ public class GameManager : MonoBehaviour
     //Mo$t important
     public void UpdateMoney()
     {
+        PlayerPrefs.SetInt("Money", m_Money);
+        PlayerPrefs.Save();
         Txt_MoneyText.text = m_Money.ToString();
     }
 
@@ -198,8 +360,10 @@ public class GameManager : MonoBehaviour
         m_LvlSpeed++;
         m_Money -= m_MoneyToUpgradeSpeed;
 
+        SavePlayerPrefSpeed();
         UpdateMoney();
-        UpdateButton(Txt_Speed, m_LvlSpeed.ToString() + "\nSpeed\n" + m_MoneyToUpgradeSpeed.ToString());
+        UpdateButton(Txt_SpeedLvl,  "Lvl : " + m_LvlSpeed);
+        UpdateButton(Txt_SpeedCost, m_MoneyToUpgradeSpeed + " $");
     }
 
     public void UpgradeArmor()
@@ -208,8 +372,10 @@ public class GameManager : MonoBehaviour
         m_LvlArmor++;
         m_Money -= m_MoneyToUpgradeArmor;
 
+        SavePlayerPrefArmor();
         UpdateMoney();
-        UpdateButton(Txt_Armor, m_LvlArmor.ToString() + "\nArmor\n" + m_MoneyToUpgradeArmor.ToString());
+        UpdateButton(Txt_ArmorLvl,  "Lvl : " + m_LvlArmor);
+        UpdateButton(Txt_ArmorCost, m_MoneyToUpgradeArmor + " $");
     }
 
     public void UpgradeAttack()
@@ -218,8 +384,10 @@ public class GameManager : MonoBehaviour
         m_LvlAttack++;
         m_Money -= m_MoneyToUpgradeAttack;
 
+        SavePlayerPrefAttack();
         UpdateMoney();
-        UpdateButton(Txt_Attack, m_LvlAttack.ToString() + "\nAttack\n" + m_MoneyToUpgradeAttack.ToString());
+        UpdateButton(Txt_AttackLvl,  "Lvl : " + m_LvlAttack);
+        UpdateButton(Txt_AttackCost, m_MoneyToUpgradeAttack + " $");
     }
 
     public float GetSpeed()
