@@ -16,8 +16,9 @@ public class GameManager : MonoBehaviour
     public bool b_canAttack = false;
     private int m_Money = 0, m_LvlSpeed = 1, m_LvlArmor = 1, m_LvlAttack = 1;
     private int m_StageNumber = 1, m_EnnemiesKilled = 0, m_EnnemiesBeforeStage = 10;
+    private int m_environmentId;
     private float m_Speed = 0.5f, m_Attack = 1, m_MoneyToUpgradeSpeed = 10, m_MoneyToUpgradeArmor = 10, m_MoneyToUpgradeAttack = 10;
-    [SerializeField] private GameObject m_EnvironnementPrefab;
+    [SerializeField] private List<GameObject> m_EnvironnementPrefabs;
     [SerializeField] private Transform m_ActualEnvironnement;
     [SerializeField] private float moveEnvironmentSpeed = 0.25f;
 
@@ -132,7 +133,19 @@ public class GameManager : MonoBehaviour
     private void Init()
     {
         Application.targetFrameRate = 60;
-        //m_ActualEnvironnement = Instantiate(m_EnvironnementPrefab, Vector3.zero, Quaternion.identity).transform;
+
+        if (!PlayerPrefs.HasKey("Environment"))
+        {
+            PlayerPrefs.SetInt("Environment", m_environmentId);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            m_environmentId = PlayerPrefs.GetInt("Environment");
+        }
+
+        var environment = m_EnvironnementPrefabs[m_environmentId];
+        m_ActualEnvironnement = Instantiate(environment, Vector3.zero, environment.transform.rotation).transform;
 
         if (!PlayerPrefs.HasKey("StepToBoss"))
         {
@@ -345,8 +358,9 @@ public class GameManager : MonoBehaviour
     private void MoveEnvironment()
     {
         Vector3 newPos = new Vector3(m_ActualEnvironnement.position.x, m_ActualEnvironnement.position.y, m_ActualEnvironnement.position.z + 30);
-        GameObject nextPart = Instantiate(m_EnvironnementPrefab, newPos, m_ActualEnvironnement.rotation);
-
+        var environment = m_EnvironnementPrefabs[m_environmentId];
+        GameObject nextPart = Instantiate(environment, newPos, environment.transform.rotation);
+        
         StartCoroutine(MoveEnvironmentCoroutine(nextPart.transform));
     }
 
@@ -393,6 +407,9 @@ public class GameManager : MonoBehaviour
             m_StageNumber += 1;
             Txt_StageStep.text = m_StageNumber.ToString();
             
+            m_environmentId = Random.Range(0, m_EnvironnementPrefabs.Count - 1);
+
+            PlayerPrefs.SetInt("Environment", m_environmentId);
             PlayerPrefs.SetInt("StageNumber", m_StageNumber);
             PlayerPrefs.SetInt("StepToBoss", 0);
         }
