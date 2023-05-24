@@ -348,8 +348,7 @@ public class GameManager : MonoBehaviour
 
     //Called every seconds to hit ennemy
     public void DamageEnnemy()
-    {        
-        //m_Player.transform.do
+    {
         m_ActualEnnemy.TakeDmg(m_Attack);
         
         m_enemyPunchTween.Complete();
