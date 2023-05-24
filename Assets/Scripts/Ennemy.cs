@@ -13,22 +13,12 @@ public class Ennemy : MonoBehaviour
     public bool b_Boss;
     public float m_MaxHealth;
     public float m_Health;
-    public int m_Armor;
     public int m_Rewards;
 
     private void Start()
     {
         var test = GetComponent<MeshRenderer>();
         test.material.color = Random.ColorHSV();
-    }
-
-    private void Update()
-    {
-        if (m_Health <= 0)
-        {
-            m_Health = 0;
-            GameManager.instance.EnnemyDeath(this);
-        }
     }
 
     private void LateUpdate()
@@ -43,26 +33,37 @@ public class Ennemy : MonoBehaviour
 
     public void TakeDmg(float dmg)
     {
-        if (m_Health <= 0) return;
         hitParticle.gameObject.SetActive(true);
         hitParticle.Play();
         
         m_Health -= dmg;
+
+        if (m_Health <= 0)
+        {
+            m_Health = 0;
+            GameManager.instance.EnnemyDeath(this);
+        }
     }
 
     public void SetHealth(int health)
     {
-        m_MaxHealth = health;
-        m_Health = health;
-    }
-
-    public void SetArmor(int armor)
-    {
-        m_Armor = armor;
+        if (b_Boss)
+        {
+            m_MaxHealth = health * 100;
+            m_Health = health * 100;
+        }
+        else
+        {
+            m_MaxHealth = health;
+            m_Health = health;
+        }
     }
 
     public void SetRewards(int rewards)
     {
-        m_Rewards = rewards;
+        if(b_Boss)
+            m_Rewards = rewards * 10;
+        else
+            m_Rewards = rewards;
     }
 }

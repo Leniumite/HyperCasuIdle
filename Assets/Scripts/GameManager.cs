@@ -14,9 +14,9 @@ public class GameManager : MonoBehaviour
     [Header("General Variables")]
     private bool b_IsEngagedInCombat = false;
     public bool b_canAttack = false;
-    private int m_Money = 0, m_MoneyToUpgradeSpeed = 10, m_MoneyToUpgradeArmor = 10, m_MoneyToUpgradeAttack = 10, m_LvlSpeed = 1, m_LvlArmor = 1, m_LvlAttack = 1;
+    private int m_Money = 0, m_LvlSpeed = 1, m_LvlArmor = 1, m_LvlAttack = 1;
     private int m_StageNumber = 1, m_EnnemiesKilled = 0, m_EnnemiesBeforeStage = 10;
-    private float m_Speed = 0.5f, m_Attack = 1, m_Armor = 1;
+    private float m_Speed = 0.5f, m_Attack = 1, m_MoneyToUpgradeSpeed = 10, m_MoneyToUpgradeArmor = 10, m_MoneyToUpgradeAttack = 10;
     [SerializeField] private GameObject m_EnvironnementPrefab;
     [SerializeField] private Transform m_ActualEnvironnement;
     [SerializeField] private float moveEnvironmentSpeed = 0.25f;
@@ -51,6 +51,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI Txt_StepsToBoss;
     [SerializeField] private TextMeshProUGUI Txt_EnemyLife;
     [SerializeField] private GameObject m_FillBar;
+    [SerializeField] private GameObject m_TimeBar;
     [SerializeField] private Button moneyReward;
     
     [Header("Ennemies")]
@@ -58,6 +59,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject m_BossPrefab;
     private Ennemy m_ActualEnnemy;
     [SerializeField] private Transform m_EnnemyPrefabPosition;
+    private bool b_BossPhase = false;
+    private float m_ActualBossTime;
+    [SerializeField] private float m_TimeToDefeatBoss;
 
     public Player m_Player;
 
@@ -74,6 +78,9 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         Init();
+        m_ActualBossTime = m_TimeToDefeatBoss;
+
+        m_TimeBar.SetActive(false);
 
         AdsManager.instance.OnShowAdsRewardedComplete += () =>
         {
@@ -100,6 +107,26 @@ public class GameManager : MonoBehaviour
         float healthRatio = Mathf.Max(0, m_ActualEnnemy.m_Health / m_ActualEnnemy.m_MaxHealth);
         m_FillBar.transform.localScale = new Vector3(healthRatio, m_FillBar.transform.localScale.y, m_FillBar.transform.localScale.z);
         Txt_EnemyLife.text = m_ActualEnnemy.m_Health.ToString();
+
+        if (b_BossPhase)
+        {
+            m_TimeBar.SetActive(true);
+            m_ActualBossTime -= Time.deltaTime;
+
+            float timeRatio = Mathf.Max(0, m_ActualBossTime / m_TimeToDefeatBoss);
+            m_TimeBar.transform.localScale = new Vector3(timeRatio, m_TimeBar.transform.localScale.y, m_TimeBar.transform.localScale.z);
+
+            //If the boss don't die but the time reaches 0
+            if(m_ActualBossTime <= 0)
+            {
+                m_ActualBossTime = 0;
+                b_BossPhase = false;
+                m_TimeBar.SetActive(false);
+                m_ActualBossTime = m_TimeToDefeatBoss;
+                b_canAttack = true;
+                Destroy(m_ActualEnnemy);
+            }
+        }
     }
 
     private void Init()
@@ -174,7 +201,7 @@ public class GameManager : MonoBehaviour
         
         if (!PlayerPrefs.HasKey("SpeedCost"))
         {
-            PlayerPrefs.SetInt("SpeedCost", m_MoneyToUpgradeSpeed);
+            PlayerPrefs.SetInt("SpeedCost", (int)m_MoneyToUpgradeSpeed);
             PlayerPrefs.Save();
         }
         else
@@ -188,14 +215,14 @@ public class GameManager : MonoBehaviour
     
     private void InitPlayerPrefArmor()
     {
-        if (!PlayerPrefs.HasKey("Armor"))
+        if (!PlayerPrefs.HasKey("TimeToBoss"))
         {
-            PlayerPrefs.SetFloat("Armor", m_Armor);
+            PlayerPrefs.SetFloat("TimeToBoss", m_TimeToDefeatBoss);
             PlayerPrefs.Save();
         }
         else
         {
-            m_Armor = PlayerPrefs.GetFloat("Armor");
+            m_TimeToDefeatBoss = PlayerPrefs.GetFloat("Armor");
         }
         
         if (!PlayerPrefs.HasKey("ArmorLvl"))
@@ -210,7 +237,7 @@ public class GameManager : MonoBehaviour
         
         if (!PlayerPrefs.HasKey("ArmorCost"))
         {
-            PlayerPrefs.SetInt("ArmorCost", m_MoneyToUpgradeArmor);
+            PlayerPrefs.SetInt("ArmorCost", (int)m_MoneyToUpgradeArmor);
             PlayerPrefs.Save();
         }
         else
@@ -246,7 +273,7 @@ public class GameManager : MonoBehaviour
         
         if (!PlayerPrefs.HasKey("AttackCost"))
         {
-            PlayerPrefs.SetInt("AttackCost", m_MoneyToUpgradeAttack);
+            PlayerPrefs.SetInt("AttackCost", (int)m_MoneyToUpgradeAttack);
             PlayerPrefs.Save();
         }
         else
@@ -262,15 +289,15 @@ public class GameManager : MonoBehaviour
     {
         PlayerPrefs.SetFloat("Speed", m_LvlSpeed);
         PlayerPrefs.SetInt("SpeedLvl", m_LvlSpeed);
-        PlayerPrefs.SetInt("SpeedCost", m_MoneyToUpgradeSpeed);
+        PlayerPrefs.SetInt("SpeedCost", (int)m_MoneyToUpgradeSpeed);
         PlayerPrefs.Save();
     }
     
     private void SavePlayerPrefArmor()
     {
-        PlayerPrefs.SetFloat("Armor", m_Armor);
+        PlayerPrefs.SetFloat("Armor", m_TimeToDefeatBoss);
         PlayerPrefs.SetInt("ArmorLvl", m_LvlArmor);
-        PlayerPrefs.SetInt("ArmorCost", m_MoneyToUpgradeArmor);
+        PlayerPrefs.SetInt("ArmorCost", (int)m_MoneyToUpgradeArmor);
         PlayerPrefs.Save();
     }
     
@@ -278,7 +305,7 @@ public class GameManager : MonoBehaviour
     {
         PlayerPrefs.SetFloat("Attack", m_Attack);
         PlayerPrefs.SetInt("AttackLvl", m_LvlAttack);
-        PlayerPrefs.SetInt("AttackCost", m_MoneyToUpgradeAttack);
+        PlayerPrefs.SetInt("AttackCost", (int)m_MoneyToUpgradeAttack);
         PlayerPrefs.Save();
     }
     
@@ -286,12 +313,23 @@ public class GameManager : MonoBehaviour
 
     //Spawn ennemies with a simple prefab and set all the variables depending the stage we are in
     private void SpawnEnnemy()
-    { 
-        GameObject ennemy = Instantiate(m_EnnemyPrefab, m_EnnemyPrefabPosition.position, m_EnnemyPrefabPosition.rotation);
-        Ennemy comp = ennemy.GetComponent<Ennemy>();
+    {
+        Ennemy comp;
+
+        if (b_BossPhase)
+        {
+            GameObject ennemy = Instantiate(m_BossPrefab, m_EnnemyPrefabPosition.position, m_EnnemyPrefabPosition.rotation);
+            comp = ennemy.GetComponent<Ennemy>();
+            comp.b_Boss = true;
+        }
+        else
+        {
+            GameObject boss = Instantiate(m_EnnemyPrefab, m_EnnemyPrefabPosition.position, m_EnnemyPrefabPosition.rotation);
+            comp = boss.GetComponent<Ennemy>();
+        }
+        
         m_ActualEnnemy = comp;
         comp.SetHealth(10 * (m_StageNumber * m_StageNumber));
-        comp.SetArmor(Mathf.FloorToInt(m_StageNumber * 1.2f));
         comp.SetRewards(Random.Range(2,10) * m_StageNumber);
 
         b_IsEngagedInCombat = true;
@@ -333,20 +371,28 @@ public class GameManager : MonoBehaviour
         m_Money += ennemy.m_Rewards;
         UpdateMoney();
         Destroy(ennemy.gameObject);
-        m_EnnemiesKilled += 1;
-        
-        PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
-        Txt_StepsToBoss.text = ((m_EnnemiesKilled % m_EnnemiesBeforeStage) + 1).ToString() + "/10";
+
+        //If the actual ennemy was not a boss
+        if (ennemy.b_Boss == false)
+        {
+            m_EnnemiesKilled += 1;
+            PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
+            Txt_StepsToBoss.text = ((m_EnnemiesKilled % m_EnnemiesBeforeStage) + 1).ToString() + "/10";
+
+            //Check if we get the good numbers of ennemies to spawn boss
+            if (m_EnnemiesKilled % m_EnnemiesBeforeStage == 0)
+                b_BossPhase = true;
+        }
+        //If the boss die
+        else
+        {
+            b_BossPhase = false;
+            m_StageNumber += 1;
+            Txt_StageStep.text = m_StageNumber.ToString();
+        }
         
         MoveEnvironment();
 
-        if (m_EnnemiesKilled % m_EnnemiesBeforeStage == 0)
-        {
-            m_StageNumber += 1;
-            
-            PlayerPrefs.SetInt("StageNumber", m_StageNumber);
-            Txt_StageStep.text = m_StageNumber.ToString();
-        }
         PlayerPrefs.Save();
     }
 
@@ -371,25 +417,27 @@ public class GameManager : MonoBehaviour
     {
         m_Speed += m_SpeedUpgrade;
         m_LvlSpeed++;
-        m_Money -= m_MoneyToUpgradeSpeed;
+        m_Money -= (int)m_MoneyToUpgradeSpeed;
         m_Player.upgradeParticle.gameObject.SetActive(true);
         m_Player.upgradeParticle.Play();
         SavePlayerPrefSpeed();
         UpdateMoney();
         UpdateButton(Txt_SpeedLvl,  "Lvl : " + m_LvlSpeed);
+        m_MoneyToUpgradeSpeed = Mathf.FloorToInt(m_MoneyToUpgradeSpeed * 1.05f);
         UpdateButton(Txt_SpeedCost, m_MoneyToUpgradeSpeed + " $");
     }
 
     public void UpgradeArmor()
     {
-        m_Armor += Mathf.CeilToInt(m_Armor / 10);
         m_LvlArmor++;
-        m_Money -= m_MoneyToUpgradeArmor;
+        m_TimeToDefeatBoss += (m_LvlArmor/100);
+        m_Money -= (int)m_MoneyToUpgradeArmor;
         m_Player.upgradeParticle.gameObject.SetActive(true);
         m_Player.upgradeParticle.Play();
         SavePlayerPrefArmor();
         UpdateMoney();
         UpdateButton(Txt_ArmorLvl,  "Lvl : " + m_LvlArmor);
+        m_MoneyToUpgradeArmor = Mathf.FloorToInt(m_MoneyToUpgradeArmor * 1.05f);
         UpdateButton(Txt_ArmorCost, m_MoneyToUpgradeArmor + " $");
     }
 
@@ -397,13 +445,14 @@ public class GameManager : MonoBehaviour
     {
         m_Attack += Mathf.CeilToInt(m_Attack / 10);
         m_LvlAttack++;
-        m_Money -= m_MoneyToUpgradeAttack;
+        m_Money -= (int)m_MoneyToUpgradeAttack;
 
         m_Player.upgradeParticle.gameObject.SetActive(true);
         m_Player.upgradeParticle.Play();
         SavePlayerPrefAttack();
         UpdateMoney();
         UpdateButton(Txt_AttackLvl,  "Lvl : " + m_LvlAttack);
+        m_MoneyToUpgradeAttack = Mathf.FloorToInt(m_MoneyToUpgradeAttack * 1.05f);
         UpdateButton(Txt_AttackCost, m_MoneyToUpgradeAttack + " $");
     }
 
