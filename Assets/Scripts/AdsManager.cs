@@ -4,6 +4,8 @@ using UnityEngine.Advertisements;
 
 public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowListener, IUnityAdsInitializationListener
 {
+    public static AdsManager adsManager;
+
     [SerializeField] private bool testMode = true;
     [SerializeField] private BannerPosition bannerPosition = BannerPosition.BOTTOM_CENTER;
 
@@ -11,7 +13,7 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
     private const string GAME_ID = "5270504";
     private const string PLACEMENT_ID = "Interstitial_iOS";
 #elif UNITY_ANDROID
-    private const string GAME_ID = "5270505";
+    private const string GAME_ID = "5289755";
     private const string PLACEMENT_ID = "Interstitial_Android";
     private const string PLACEMENTBANNER_ID = "Banner_Android";
     private const string PLACEMENTREWARDED_ID = "Rewarded_Android";

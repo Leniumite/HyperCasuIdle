@@ -92,6 +92,9 @@ public class GameManager : MonoBehaviour
 
     private void Init()
     {
+        AdsManager.adsManager.LoadAdInterstitial();
+        AdsManager.adsManager.PlayAdsInterstitial();
+
         Application.targetFrameRate = 60;
         m_ActualEnvironnement = Instantiate(m_EnvironnementPrefab, Vector3.zero, Quaternion.identity).transform;
 
