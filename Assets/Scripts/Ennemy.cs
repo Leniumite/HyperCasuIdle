@@ -9,6 +9,7 @@ public class Ennemy : MonoBehaviour
     private float m_AttackCooldown;
     private float m_Cooldown;
 
+    public ParticleSystem hitParticle;
     public bool b_Boss;
     public float m_MaxHealth;
     public float m_Health;
@@ -43,6 +44,9 @@ public class Ennemy : MonoBehaviour
     public void TakeDmg(float dmg)
     {
         if (m_Health <= 0) return;
+        hitParticle.gameObject.SetActive(true);
+        hitParticle.Play();
+        
         m_Health -= dmg;
     }
 
