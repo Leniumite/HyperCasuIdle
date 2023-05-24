@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,6 +7,7 @@ using TMPro;
 using System.ComponentModel;
 using DG.Tweening;
 using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 public class GameManager : MonoBehaviour
 {
@@ -80,9 +82,9 @@ public class GameManager : MonoBehaviour
     {
         Init();
         m_ActualBossTime = m_TimeToDefeatBoss;
-
         m_TimeBar.SetActive(false);
 
+        AdsManager.instance.LoadBanner();
         AdsManager.instance.OnShowAdsRewardedComplete += () =>
         {
             m_Money += 20;
@@ -101,15 +103,12 @@ public class GameManager : MonoBehaviour
         Btn_Speed.interactable = m_Money >= m_MoneyToUpgradeSpeed ? true : false;
         Btn_Armor.interactable = m_Money >= m_MoneyToUpgradeArmor ? true : false;
         Btn_Attack.interactable = m_Money >= m_MoneyToUpgradeAttack ? true : false;
-
-        if (!b_IsEngagedInCombat)
-            SpawnEnnemy();
-
+        
         float healthRatio = Mathf.Max(0, m_ActualEnnemy.m_Health / m_ActualEnnemy.m_MaxHealth);
         m_FillBar.transform.localScale = new Vector3(healthRatio, m_FillBar.transform.localScale.y, m_FillBar.transform.localScale.z);
         Txt_EnemyLife.text = m_ActualEnnemy.m_Health.ToString();
 
-        if (b_BossPhase)
+        if (b_BossPhase && b_IsEngagedInCombat)
         {
             m_TimeBar.SetActive(true);
             m_ActualBossTime -= Time.deltaTime;
@@ -122,10 +121,12 @@ public class GameManager : MonoBehaviour
             {
                 m_ActualBossTime = 0;
                 b_BossPhase = false;
+                b_IsEngagedInCombat = false;
                 m_TimeBar.SetActive(false);
                 m_ActualBossTime = m_TimeToDefeatBoss;
                 b_canAttack = true;
-                Destroy(m_ActualEnnemy);
+                Destroy(m_ActualEnnemy.gameObject);
+                SpawnEnnemy();
             }
         }
     }
@@ -173,7 +174,6 @@ public class GameManager : MonoBehaviour
         {
             PlayerPrefs.SetInt("Money", m_Money);
             PlayerPrefs.Save();
-
         }
         else
         {
@@ -181,11 +181,28 @@ public class GameManager : MonoBehaviour
         }
         Txt_MoneyText.text = m_Money.ToString();
 
+        if (!PlayerPrefs.HasKey("BossPhase"))
+        {
+            PlayerPrefs.SetInt("BossPhase", 0);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            b_BossPhase = Convert.ToBoolean(PlayerPrefs.GetInt("BossPhase"));
+
+            if (b_BossPhase)
+            {
+                b_BossPhase = true;
+                Txt_StepsToBoss.text = "BOSS";
+            }
+        }
+        
         InitPlayerPrefSpeed();
         InitPlayerPrefArmor();
         InitPlayerPrefAttack();
         
         m_Player = GameObject.Find("Player").GetComponent<Player>();
+        SpawnEnnemy();
     }
 
     #region PlayerPrefs
@@ -235,7 +252,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            m_TimeToDefeatBoss = PlayerPrefs.GetFloat("Armor");
+            m_TimeToDefeatBoss = PlayerPrefs.GetFloat("TimeToBoss");
         }
         
         if (!PlayerPrefs.HasKey("ArmorLvl"))
@@ -366,21 +383,23 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator MoveEnvironmentCoroutine(Transform nextPart)
     {
-        while (nextPart.position != Vector3.zero)
+        while (nextPart.position.z > 0)
         {
-            nextPart.position = new Vector3(0, 0, nextPart.position.z - moveEnvironmentSpeed);
-            m_ActualEnvironnement.position = new Vector3(0, 0, m_ActualEnvironnement.position.z - moveEnvironmentSpeed);
+            nextPart.position = new Vector3(0, 0, nextPart.position.z - moveEnvironmentSpeed * Time.deltaTime);
+            m_ActualEnvironnement.position = new Vector3(0, 0, m_ActualEnvironnement.position.z - moveEnvironmentSpeed * Time.deltaTime);
             yield return null;
         }
         
         Destroy(m_ActualEnvironnement.gameObject);
         m_ActualEnvironnement = nextPart.transform;
-        b_IsEngagedInCombat = false;
+        m_ActualEnvironnement.transform.position = Vector3.zero;
+        SpawnEnnemy();
     }
 
     //All these deaths increments several counters to knoww where the player is in the progression
     public void EnnemyDeath(Ennemy ennemy)
     {
+        b_IsEngagedInCombat = false;
         b_canAttack = true;
         m_Money += ennemy.m_Rewards;
         UpdateMoney();
@@ -395,7 +414,12 @@ public class GameManager : MonoBehaviour
 
             //Check if we get the good numbers of ennemies to spawn boss
             if (m_EnnemiesKilled % m_EnnemiesBeforeStage == 0)
+            {
                 b_BossPhase = true;
+                Txt_StepsToBoss.text = "BOSS";
+                PlayerPrefs.SetInt("BossPhase", 1);
+                PlayerPrefs.Save();
+            }
         }
         //If the boss die
         else
@@ -406,12 +430,21 @@ public class GameManager : MonoBehaviour
             b_BossPhase = false;
             m_StageNumber += 1;
             Txt_StageStep.text = m_StageNumber.ToString();
+
+            int tempEnvironmentId;
+            do
+            {
+                tempEnvironmentId = Random.Range(0, m_EnvironnementPrefabs.Count - 1);
+            } while (m_environmentId == tempEnvironmentId);
             
-            m_environmentId = Random.Range(0, m_EnvironnementPrefabs.Count - 1);
+            m_environmentId = tempEnvironmentId;
+
+            m_EnnemiesKilled = 0;
+            Txt_StepsToBoss.text = ((m_EnnemiesKilled % m_EnnemiesBeforeStage) + 1).ToString() + "/10";
 
             PlayerPrefs.SetInt("Environment", m_environmentId);
             PlayerPrefs.SetInt("StageNumber", m_StageNumber);
-            PlayerPrefs.SetInt("StepToBoss", 0);
+            PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
         }
         
         MoveEnvironment();

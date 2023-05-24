@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class Player : MonoBehaviour
 {
@@ -28,10 +29,17 @@ public class Player : MonoBehaviour
 
 #if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            if (!EventSystem.current.IsPointerOverGameObject())
+                GameManager.instance.DamageEnnemy();
+        }
 #else
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        {
+            if (!EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId)))
+                GameManager.instance.DamageEnnemy();
+        }
 #endif
-            GameManager.instance.DamageEnnemy();
     }
 
     public void LateUpdate()

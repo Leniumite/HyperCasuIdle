@@ -161,6 +161,7 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
     void OnBannerLoaded()
     {
         Debug.Log("Banner loaded");
+        ShowBannerAd();
     }
  
     // Implement code to execute when the load errorCallback event triggers:
