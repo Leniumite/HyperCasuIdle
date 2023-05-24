@@ -386,9 +386,15 @@ public class GameManager : MonoBehaviour
         //If the boss die
         else
         {
+            m_TimeBar.SetActive(false);
+            m_ActualBossTime = m_TimeToDefeatBoss;
+            b_canAttack = true;
             b_BossPhase = false;
             m_StageNumber += 1;
             Txt_StageStep.text = m_StageNumber.ToString();
+            
+            PlayerPrefs.SetInt("StageNumber", m_StageNumber);
+            PlayerPrefs.SetInt("StepToBoss", 0);
         }
         
         MoveEnvironment();
