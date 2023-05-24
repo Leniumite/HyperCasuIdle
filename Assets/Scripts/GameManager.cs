@@ -51,7 +51,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI Txt_StepsToBoss;
     [SerializeField] private TextMeshProUGUI Txt_EnemyLife;
     [SerializeField] private GameObject m_FillBar;
-
+    [SerializeField] private Button moneyReward;
+    
     [Header("Ennemies")]
     [SerializeField] private GameObject m_EnnemyPrefab;
     [SerializeField] private GameObject m_BossPrefab;
@@ -73,6 +74,17 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         Init();
+
+        AdsManager.instance.OnShowAdsRewardedComplete += () =>
+        {
+            m_Money += 20;
+            UpdateMoney();
+        };
+        
+        moneyReward.onClick.AddListener(() =>
+        {
+            AdsManager.instance.LoadAdRewarded();
+        });
     }
 
     //Spawn ennemies one by one
@@ -92,11 +104,8 @@ public class GameManager : MonoBehaviour
 
     private void Init()
     {
-        AdsManager.adsManager.LoadAdInterstitial();
-        AdsManager.adsManager.PlayAdsInterstitial();
-
         Application.targetFrameRate = 60;
-        m_ActualEnvironnement = Instantiate(m_EnvironnementPrefab, Vector3.zero, Quaternion.identity).transform;
+        //m_ActualEnvironnement = Instantiate(m_EnvironnementPrefab, Vector3.zero, Quaternion.identity).transform;
 
         if (!PlayerPrefs.HasKey("StepToBoss"))
         {

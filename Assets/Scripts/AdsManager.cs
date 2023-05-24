@@ -4,7 +4,7 @@ using UnityEngine.Advertisements;
 
 public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowListener, IUnityAdsInitializationListener
 {
-    public static AdsManager adsManager;
+    public static AdsManager instance;
 
     [SerializeField] private bool testMode = true;
     [SerializeField] private BannerPosition bannerPosition = BannerPosition.BOTTOM_CENTER;
@@ -25,6 +25,14 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
     public Action OnShowAdsStart;
     public Action OnShowAdsComplete;
     public Action OnShowAdsRewardedComplete;
+
+    private void Awake()
+    {
+        if (instance != null)
+            DestroyImmediate(instance);
+        else
+            instance = this;
+    }
 
     private void Start()
     {
@@ -79,13 +87,17 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
 #if UNITY_ANDROID || UNITY_IOS
         if (Advertisement.isInitialized)
         {
-            Advertisement.Show(PLACEMENT_ID, this);
+            Advertisement.Show(PLACEMENTREWARDED_ID, this);
         }
 #endif
     }
     
     public void OnUnityAdsAdLoaded(string placementId)
     {
+        if (placementId == PLACEMENTREWARDED_ID)
+        {
+            PlayAdsRewarded();
+        }
         // Optionally execute code if the Ad Unit successfully loads content.
     }
     
@@ -115,7 +127,6 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
 
         if (placementId.Equals(PLACEMENTREWARDED_ID))
         {
-            Advertisement.Load(PLACEMENTREWARDED_ID, this);
             if (showCompletionState.Equals(UnityAdsShowCompletionState.COMPLETED))
             {
                 OnShowAdsRewardedComplete?.Invoke();
@@ -160,7 +171,7 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
     }
  
     // Implement a method to call when the Show Banner button is clicked:
-    void ShowBannerAd()
+    public void ShowBannerAd()
     {
         // Set up options to notify the SDK of show events:
         BannerOptions options = new BannerOptions
