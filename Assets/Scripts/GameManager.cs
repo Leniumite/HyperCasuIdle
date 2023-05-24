@@ -181,7 +181,7 @@ public class GameManager : MonoBehaviour
     {
         if (!PlayerPrefs.HasKey("Speed"))
         {
-            PlayerPrefs.SetFloat("Speed", m_LvlSpeed);
+            PlayerPrefs.SetFloat("Speed", m_Speed);
             PlayerPrefs.Save();
         }
         else
@@ -287,7 +287,7 @@ public class GameManager : MonoBehaviour
 
     private void SavePlayerPrefSpeed()
     {
-        PlayerPrefs.SetFloat("Speed", m_LvlSpeed);
+        PlayerPrefs.SetFloat("Speed", m_Speed);
         PlayerPrefs.SetInt("SpeedLvl", m_LvlSpeed);
         PlayerPrefs.SetInt("SpeedCost", (int)m_MoneyToUpgradeSpeed);
         PlayerPrefs.Save();

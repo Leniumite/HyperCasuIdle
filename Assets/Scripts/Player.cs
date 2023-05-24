@@ -8,7 +8,12 @@ public class Player : MonoBehaviour
     private float m_Timer = 5;
     private float m_TimerReset = 5;
     public ParticleSystem upgradeParticle;
-    
+
+    private void Start()
+    {
+        m_Timer = m_TimerReset / GameManager.instance.GetSpeed();
+    }
+
     private void Update()
     {
         m_Timer -= Time.deltaTime;
