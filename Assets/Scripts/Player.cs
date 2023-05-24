@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    private float m_Timer = 1;
-    private float m_TimerReset = 1;
+    private float m_Timer = 5;
+    private float m_TimerReset = 5;
     public ParticleSystem upgradeParticle;
     
     private void Update()

@@ -104,7 +104,7 @@ public class GameManager : MonoBehaviour
         {
             m_EnnemiesKilled = PlayerPrefs.GetInt("StepToBoss");
         }
-        Txt_StepsToBoss.text = m_EnnemiesKilled + "/10";
+        Txt_StepsToBoss.text = (m_EnnemiesKilled + 1) + "/10";
         
         if (!PlayerPrefs.HasKey("StageNumber"))
         {
@@ -322,11 +322,9 @@ public class GameManager : MonoBehaviour
         UpdateMoney();
         Destroy(ennemy.gameObject);
         m_EnnemiesKilled += 1;
-
-        UpdateStepsToBoss();
         
         PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
-        Txt_StepsToBoss.text = (m_EnnemiesKilled+1).ToString() + "/10";
+        Txt_StepsToBoss.text = ((m_EnnemiesKilled % m_EnnemiesBeforeStage) + 1).ToString() + "/10";
         
         MoveEnvironment();
 
@@ -346,11 +344,6 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.SetInt("Money", m_Money);
         PlayerPrefs.Save();
         Txt_MoneyText.text = m_Money.ToString();
-    }
-
-    public void UpdateStepsToBoss()
-    {
-        Txt_StepsToBoss.text = (1+(m_EnnemiesKilled % m_EnnemiesBeforeStage)).ToString() + "/10";
     }
 
     //Called every seconds to hit ennemy
