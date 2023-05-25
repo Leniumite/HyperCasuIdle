@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.ComponentModel;
 using DG.Tweening;
+using DG.Tweening.Core;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
@@ -57,6 +58,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject m_TimeBar;
     [SerializeField] private Button Btn_MoneyReward;
     [SerializeField] private Button Btn_Boss;
+    [SerializeField] private Transform moneyDropParent;
+    [SerializeField] private GameObject moneyPrefab;
     
     [Header("Ennemies")]
     [SerializeField] private GameObject m_EnnemyPrefab;
@@ -130,6 +133,9 @@ public class GameManager : MonoBehaviour
             {
                 m_ActualBossTime = 0;
                 b_BossPhase = false;
+                PlayerPrefs.SetInt("BossPhase", 0);
+                PlayerPrefs.Save();
+
                 b_IsEngagedInCombat = false;
                 m_TimeBar.SetActive(false);
                 m_ActualBossTime = m_TimeToDefeatBoss;
@@ -419,12 +425,47 @@ public class GameManager : MonoBehaviour
         Destroy(m_ActualEnnemy);
     }
 
+    private Sequence _moneyTextTween;
     //All these deaths increments several counters to knoww where the player is in the progression
     public void EnnemyDeath(Ennemy ennemy)
     {
         b_IsEngagedInCombat = false;
         b_canAttack = true;
         m_Money += ennemy.m_Rewards;
+        _moneyTextTween = DOTween.Sequence();
+        
+        var moneyTextScale = Txt_MoneyText.transform.localScale;
+        var reward = Mathf.Clamp(ennemy.m_Rewards, 0, 50);
+        for (int i = 0; i < reward; i++)
+        {
+            var randomPos = Random.insideUnitCircle * 200;
+            randomPos -= new Vector2(ennemy.transform.position.z, ennemy.transform.position.y);
+
+            var moneyDropTemp = Instantiate(moneyPrefab, moneyDropParent);
+            var RectTransform = moneyDropTemp.GetComponent<RectTransform>();
+            RectTransform.anchoredPosition = randomPos;
+            var scaleRatio = Random.Range(1, 3);
+            RectTransform.localScale = new Vector3(scaleRatio, scaleRatio, scaleRatio);
+            var rotRatio = Random.Range(0, 360);
+            RectTransform.rotation = Quaternion.Euler(new Vector3(0, 0, rotRatio));;
+
+            moneyDropTemp.transform.DOMove(Txt_MoneyText.transform.position, Random.Range(0.25f, 1f)).SetEase(Ease.InOutSine)
+                .OnComplete(() =>
+                {
+                    if (!_moneyTextTween.IsPlaying())
+                    {
+                        _moneyTextTween.Append(Txt_MoneyText.transform.DOScale(Vector3.one * 1.25f, 0.1f).OnComplete(() =>
+                        {
+                            Txt_MoneyText.transform.localScale = moneyTextScale;
+                            _moneyTextTween.Kill();
+                        }));
+                    }
+
+                    Destroy(moneyDropTemp);
+                });
+        }
+        
+        
         UpdateMoney();
         Destroy(ennemy.gameObject);
 
@@ -480,11 +521,11 @@ public class GameManager : MonoBehaviour
     //Mo$t important
     public void UpdateMoney()
     {
+        
         PlayerPrefs.SetInt("Money", m_Money);
         PlayerPrefs.Save();
         Txt_MoneyText.text = m_Money.ToString();
     }
-
 
     //Called every seconds to hit ennemy
     public void DamageEnnemy()
