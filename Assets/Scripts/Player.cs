@@ -36,7 +36,7 @@ public class Player : MonoBehaviour
 #else
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
-            if (!EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId)))
+            if (!EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId))
                 GameManager.instance.DamageEnnemy();
         }
 #endif
