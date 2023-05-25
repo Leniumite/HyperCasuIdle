@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
 
     private Tweener m_enemyPunchTween;
     private Tweener m_playerPunchTween;
+    private Sequence _moneyTextTween;
     [SerializeField] private float rangePunchPosition = 0.25f;
 
     [Header("Upgrades")]
@@ -67,6 +68,7 @@ public class GameManager : MonoBehaviour
     private Ennemy m_ActualEnnemy;
     [SerializeField] private Transform m_EnnemyPrefabPosition;
     private bool b_BossPhase = false;
+    private bool b_BossLoose = false;
     private float m_ActualBossTime;
     [SerializeField] private float m_TimeToDefeatBoss;
 
@@ -94,7 +96,6 @@ public class GameManager : MonoBehaviour
         Init();
         m_ActualBossTime = m_TimeToDefeatBoss + (m_LvlArmor/10);
         m_TimeBar.SetActive(false);
-        Btn_Boss.interactable = false;
 
         AdsManager.instance.LoadBanner();
         AdsManager.instance.OnShowAdsRewardedComplete += () =>
@@ -133,6 +134,8 @@ public class GameManager : MonoBehaviour
             {
                 m_ActualBossTime = 0;
                 b_BossPhase = false;
+                b_BossLoose = true;
+                PlayerPrefs.SetInt("BossLoose", 1);
                 PlayerPrefs.SetInt("BossPhase", 0);
                 PlayerPrefs.Save();
 
@@ -141,7 +144,7 @@ public class GameManager : MonoBehaviour
                 m_ActualBossTime = m_TimeToDefeatBoss;
                 b_canAttack = true;
                 Destroy(m_ActualEnnemy.gameObject);
-                SpawnEnnemy();
+                MoveEnvironment();
                 Btn_Boss.interactable = true;
             }
         }
@@ -149,10 +152,7 @@ public class GameManager : MonoBehaviour
 
     private void Init()
     {
-        if (Random.Range(0, 101) >= 95)
-            m_Music.clip = m_Fight;
-        else
-            m_Music.clip = m_Sympa;
+        m_Music.clip = Random.Range(0, 101) >= 95 ? m_Fight : m_Sympa;
 
         Application.targetFrameRate = 60;
 
@@ -214,6 +214,22 @@ public class GameManager : MonoBehaviour
             if (b_BossPhase)
             {
                 b_BossPhase = true;
+                Txt_StepsToBoss.text = "BOSS";
+            }
+        }
+
+        if (!PlayerPrefs.HasKey("BossLoose"))
+        {
+            PlayerPrefs.SetInt("BossLoose", 0);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            b_BossLoose = Convert.ToBoolean(PlayerPrefs.GetInt("BossLoose"));
+
+            if (b_BossLoose)
+            {
+                Btn_Boss.interactable = true;
                 Txt_StepsToBoss.text = "BOSS";
             }
         }
@@ -422,18 +438,21 @@ public class GameManager : MonoBehaviour
     public void EnterBossPhase()
     {
         b_BossPhase = true;
-        Destroy(m_ActualEnnemy);
+        b_IsEngagedInCombat = false;
+        b_canAttack = true;
+
+        Destroy(m_ActualEnnemy.gameObject);
+        MoveEnvironment();
     }
 
-    private Sequence _moneyTextTween;
-    //All these deaths increments several counters to knoww where the player is in the progression
+    //All these deaths increments several counters to know where the player is in the progression
     public void EnnemyDeath(Ennemy ennemy)
     {
         b_IsEngagedInCombat = false;
         b_canAttack = true;
         m_Money += ennemy.m_Rewards;
-        _moneyTextTween = DOTween.Sequence();
         
+        _moneyTextTween = DOTween.Sequence();
         var moneyTextScale = Txt_MoneyText.transform.localScale;
         var reward = Mathf.Clamp(ennemy.m_Rewards, 0, 50);
         for (int i = 0; i < reward; i++)
@@ -472,17 +491,24 @@ public class GameManager : MonoBehaviour
         //If the actual ennemy was not a boss
         if (ennemy.b_Boss == false)
         {
-            m_EnnemiesKilled += 1;
-            PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
-            Txt_StepsToBoss.text = ((m_EnnemiesKilled % m_EnnemiesBeforeStage) + 1).ToString() + "/10";
-
-            //Check if we get the good numbers of ennemies to spawn boss
-            if (m_EnnemiesKilled % m_EnnemiesBeforeStage == 0)
+            if (b_BossLoose)
             {
-                b_BossPhase = true;
-                Txt_StepsToBoss.text = "BOSS";
-                PlayerPrefs.SetInt("BossPhase", 1);
-                PlayerPrefs.Save();
+                Txt_StepsToBoss.text = "Boss";
+            }
+            else
+            {
+                m_EnnemiesKilled += 1;
+                PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
+                Txt_StepsToBoss.text = ((m_EnnemiesKilled % m_EnnemiesBeforeStage) + 1).ToString() + "/10";
+                
+                //Check if we get the good numbers of ennemies to spawn boss
+                if (m_EnnemiesKilled % m_EnnemiesBeforeStage == 0)
+                {
+                    b_BossPhase = true;
+                    Txt_StepsToBoss.text = "BOSS";
+                    PlayerPrefs.SetInt("BossPhase", 1);
+                    PlayerPrefs.Save();
+                }
             }
         }
         //If the boss die
@@ -498,7 +524,7 @@ public class GameManager : MonoBehaviour
             int tempEnvironmentId;
             do
             {
-                tempEnvironmentId = Random.Range(0, m_EnvironnementPrefabs.Count - 1);
+                tempEnvironmentId = Random.Range(0, m_EnvironnementPrefabs.Count);
             } while (m_environmentId == tempEnvironmentId);
             
             m_environmentId = tempEnvironmentId;
@@ -506,6 +532,7 @@ public class GameManager : MonoBehaviour
             m_EnnemiesKilled = 0;
             Txt_StepsToBoss.text = ((m_EnnemiesKilled % m_EnnemiesBeforeStage) + 1).ToString() + "/10";
 
+            PlayerPrefs.SetInt("BossPhase", 0);
             PlayerPrefs.SetInt("Environment", m_environmentId);
             PlayerPrefs.SetInt("StageNumber", m_StageNumber);
             PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);

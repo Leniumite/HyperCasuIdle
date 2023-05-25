@@ -50,8 +50,8 @@ public class Ennemy : MonoBehaviour
     {
         if (b_Boss)
         {
-            m_MaxHealth = health * 50;
-            m_Health = health * 50;
+            m_MaxHealth = health * 25;
+            m_Health = health * 25;
         }
         else
         {
