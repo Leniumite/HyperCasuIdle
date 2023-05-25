@@ -55,7 +55,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI Txt_EnemyLife;
     [SerializeField] private GameObject m_FillBar;
     [SerializeField] private GameObject m_TimeBar;
-    [SerializeField] private Button moneyReward;
+    [SerializeField] private Button Btn_MoneyReward;
+    [SerializeField] private Button Btn_Boss;
     
     [Header("Ennemies")]
     [SerializeField] private GameObject m_EnnemyPrefab;
@@ -65,6 +66,7 @@ public class GameManager : MonoBehaviour
     private bool b_BossPhase = false;
     private float m_ActualBossTime;
     [SerializeField] private float m_TimeToDefeatBoss;
+    public AudioSource m_EnnemyHit;
 
     public Player m_Player;
 
@@ -91,7 +93,7 @@ public class GameManager : MonoBehaviour
             UpdateMoney();
         };
         
-        moneyReward.onClick.AddListener(() =>
+        Btn_MoneyReward.onClick.AddListener(() =>
         {
             AdsManager.instance.LoadAdRewarded();
         });
@@ -469,6 +471,7 @@ public class GameManager : MonoBehaviour
         m_enemyPunchTween = m_ActualEnnemy.transform.DOPunchPosition(new Vector3(Random.Range(-rangePunchPosition, rangePunchPosition), m_ActualEnnemy.transform.position.y, Random.Range(-rangePunchPosition, rangePunchPosition)), 0.5f, 5);
     }
 
+    #region Upgrades
     public void UpgradeSpeed()
     {
         m_Speed += m_SpeedUpgrade;
@@ -479,7 +482,7 @@ public class GameManager : MonoBehaviour
         SavePlayerPrefSpeed();
         UpdateMoney();
         UpdateButton(Txt_SpeedLvl,  "Lvl : " + m_LvlSpeed);
-        m_MoneyToUpgradeSpeed = Mathf.FloorToInt(m_MoneyToUpgradeSpeed * 1.05f);
+        m_MoneyToUpgradeSpeed = Mathf.FloorToInt(m_MoneyToUpgradeSpeed * 1.3f);
         UpdateButton(Txt_SpeedCost, m_MoneyToUpgradeSpeed + " $");
     }
 
@@ -493,7 +496,7 @@ public class GameManager : MonoBehaviour
         SavePlayerPrefArmor();
         UpdateMoney();
         UpdateButton(Txt_ArmorLvl,  "Lvl : " + m_LvlArmor);
-        m_MoneyToUpgradeArmor = Mathf.FloorToInt(m_MoneyToUpgradeArmor * 1.05f);
+        m_MoneyToUpgradeArmor = Mathf.FloorToInt(m_MoneyToUpgradeArmor * 1.3f);
         UpdateButton(Txt_ArmorCost, m_MoneyToUpgradeArmor + " $");
     }
 
@@ -508,9 +511,10 @@ public class GameManager : MonoBehaviour
         SavePlayerPrefAttack();
         UpdateMoney();
         UpdateButton(Txt_AttackLvl,  "Lvl : " + m_LvlAttack);
-        m_MoneyToUpgradeAttack = Mathf.FloorToInt(m_MoneyToUpgradeAttack * 1.05f);
+        m_MoneyToUpgradeAttack = Mathf.FloorToInt(m_MoneyToUpgradeAttack * 1.3f);
         UpdateButton(Txt_AttackCost, m_MoneyToUpgradeAttack + " $");
     }
+    #endregion
 
     public float GetSpeed()
     {

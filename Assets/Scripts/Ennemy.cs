@@ -35,7 +35,8 @@ public class Ennemy : MonoBehaviour
     {
         hitParticle.gameObject.SetActive(true);
         hitParticle.Play();
-        
+        GameManager.instance.m_EnnemyHit.Play();
+
         m_Health -= dmg;
 
         if (m_Health <= 0)
@@ -49,8 +50,8 @@ public class Ennemy : MonoBehaviour
     {
         if (b_Boss)
         {
-            m_MaxHealth = health * 100;
-            m_Health = health * 100;
+            m_MaxHealth = health * 50;
+            m_Health = health * 50;
         }
         else
         {
@@ -62,7 +63,7 @@ public class Ennemy : MonoBehaviour
     public void SetRewards(int rewards)
     {
         if(b_Boss)
-            m_Rewards = rewards * 10;
+            m_Rewards = rewards * 8;
         else
             m_Rewards = rewards;
     }
