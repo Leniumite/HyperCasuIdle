@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
     [Header("General Variables")]
     private bool b_IsEngagedInCombat = false;
     public bool b_canAttack = false;
-    private int m_Money = 0, m_LvlSpeed = 1, m_LvlArmor = 1, m_LvlAttack = 1;
+    private int m_Money = 0, m_LvlSpeed = 1, m_LvlArmor = 0, m_LvlAttack = 1;
     private int m_StageNumber = 1, m_EnnemiesKilled = 0, m_EnnemiesBeforeStage = 10;
     private int m_environmentId;
     private float m_Speed = 0.5f, m_Attack = 1, m_MoneyToUpgradeSpeed = 10, m_MoneyToUpgradeArmor = 10, m_MoneyToUpgradeAttack = 10;
@@ -66,7 +66,12 @@ public class GameManager : MonoBehaviour
     private bool b_BossPhase = false;
     private float m_ActualBossTime;
     [SerializeField] private float m_TimeToDefeatBoss;
+
+    [Header("Music")]
     public AudioSource m_EnnemyHit;
+    [SerializeField] private AudioSource m_Music;
+    [SerializeField] private AudioClip m_Sympa;
+    [SerializeField] private AudioClip m_Fight;
 
     public Player m_Player;
 
@@ -83,8 +88,9 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         Init();
-        m_ActualBossTime = m_TimeToDefeatBoss;
+        m_ActualBossTime = m_TimeToDefeatBoss + (m_LvlArmor/10);
         m_TimeBar.SetActive(false);
+        Btn_Boss.interactable = false;
 
         AdsManager.instance.LoadBanner();
         AdsManager.instance.OnShowAdsRewardedComplete += () =>
@@ -129,12 +135,18 @@ public class GameManager : MonoBehaviour
                 b_canAttack = true;
                 Destroy(m_ActualEnnemy.gameObject);
                 SpawnEnnemy();
+                Btn_Boss.interactable = true;
             }
         }
     }
 
     private void Init()
     {
+        if (Random.Range(0, 101) >= 95)
+            m_Music.clip = m_Fight;
+        else
+            m_Music.clip = m_Sympa;
+
         Application.targetFrameRate = 60;
 
         if (!PlayerPrefs.HasKey("Environment"))
@@ -241,8 +253,8 @@ public class GameManager : MonoBehaviour
             m_MoneyToUpgradeSpeed = PlayerPrefs.GetInt("SpeedCost");
         }
         
-        UpdateButton(Txt_SpeedLvl,  "Lvl : " + m_LvlSpeed);
-        UpdateButton(Txt_SpeedCost, m_MoneyToUpgradeSpeed + " $");
+        UpgradeText(Txt_SpeedLvl,  "Lvl : " + m_LvlSpeed);
+        UpgradeText(Txt_SpeedCost, m_MoneyToUpgradeSpeed + " $");
     }
     
     private void InitPlayerPrefArmor()
@@ -277,8 +289,8 @@ public class GameManager : MonoBehaviour
             m_MoneyToUpgradeArmor = PlayerPrefs.GetInt("ArmorCost");
         }
         
-        UpdateButton(Txt_ArmorLvl,  "Lvl : " + m_LvlArmor);
-        UpdateButton(Txt_ArmorCost, m_MoneyToUpgradeArmor + " $");
+        UpgradeText(Txt_ArmorLvl,  "Lvl : " + m_LvlArmor);
+        UpgradeText(Txt_ArmorCost, m_MoneyToUpgradeArmor + " $");
     }
     
     private void InitPlayerPrefAttack()
@@ -313,8 +325,8 @@ public class GameManager : MonoBehaviour
             m_MoneyToUpgradeAttack = PlayerPrefs.GetInt("AttackCost");
         }
         
-        UpdateButton(Txt_AttackLvl,  "Lvl : " + m_LvlAttack);
-        UpdateButton(Txt_AttackCost, m_MoneyToUpgradeAttack + " $");
+        UpgradeText(Txt_AttackLvl,  "Lvl : " + m_LvlAttack);
+        UpgradeText(Txt_AttackCost, m_MoneyToUpgradeAttack + " $");
     }
 
     private void SavePlayerPrefSpeed()
@@ -369,7 +381,7 @@ public class GameManager : MonoBehaviour
     }
 
     //Update the specified button
-    private void UpdateButton(TextMeshProUGUI text, string contenu)
+    private void UpgradeText(TextMeshProUGUI text, string contenu)
     {
          text.text = contenu;
     }
@@ -396,6 +408,12 @@ public class GameManager : MonoBehaviour
         m_ActualEnvironnement = nextPart.transform;
         m_ActualEnvironnement.transform.position = Vector3.zero;
         SpawnEnnemy();
+    }
+
+    public void EnterBossPhase()
+    {
+        b_BossPhase = true;
+        Destroy(m_ActualEnnemy);
     }
 
     //All these deaths increments several counters to knoww where the player is in the progression
@@ -447,6 +465,8 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.SetInt("Environment", m_environmentId);
             PlayerPrefs.SetInt("StageNumber", m_StageNumber);
             PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
+
+            Btn_Boss.interactable = false;
         }
         
         MoveEnvironment();
@@ -481,23 +501,23 @@ public class GameManager : MonoBehaviour
         m_Player.upgradeParticle.Play();
         SavePlayerPrefSpeed();
         UpdateMoney();
-        UpdateButton(Txt_SpeedLvl,  "Lvl : " + m_LvlSpeed);
+        UpgradeText(Txt_SpeedLvl,  "Lvl : " + m_LvlSpeed);
         m_MoneyToUpgradeSpeed = Mathf.FloorToInt(m_MoneyToUpgradeSpeed * 1.3f);
-        UpdateButton(Txt_SpeedCost, m_MoneyToUpgradeSpeed + " $");
+        UpgradeText(Txt_SpeedCost, m_MoneyToUpgradeSpeed + " $");
     }
 
     public void UpgradeArmor()
     {
         m_LvlArmor++;
-        m_TimeToDefeatBoss += (m_LvlArmor/100);
+        m_TimeToDefeatBoss += (m_LvlArmor/10);
         m_Money -= (int)m_MoneyToUpgradeArmor;
         m_Player.upgradeParticle.gameObject.SetActive(true);
         m_Player.upgradeParticle.Play();
         SavePlayerPrefArmor();
         UpdateMoney();
-        UpdateButton(Txt_ArmorLvl,  "Lvl : " + m_LvlArmor);
+        UpgradeText(Txt_ArmorLvl,  "Lvl : " + m_LvlArmor);
         m_MoneyToUpgradeArmor = Mathf.FloorToInt(m_MoneyToUpgradeArmor * 1.3f);
-        UpdateButton(Txt_ArmorCost, m_MoneyToUpgradeArmor + " $");
+        UpgradeText(Txt_ArmorCost, m_MoneyToUpgradeArmor + " $");
     }
 
     public void UpgradeAttack()
@@ -510,9 +530,9 @@ public class GameManager : MonoBehaviour
         m_Player.upgradeParticle.Play();
         SavePlayerPrefAttack();
         UpdateMoney();
-        UpdateButton(Txt_AttackLvl,  "Lvl : " + m_LvlAttack);
+        UpgradeText(Txt_AttackLvl,  "Lvl : " + m_LvlAttack);
         m_MoneyToUpgradeAttack = Mathf.FloorToInt(m_MoneyToUpgradeAttack * 1.3f);
-        UpdateButton(Txt_AttackCost, m_MoneyToUpgradeAttack + " $");
+        UpgradeText(Txt_AttackCost, m_MoneyToUpgradeAttack + " $");
     }
     #endregion
 
