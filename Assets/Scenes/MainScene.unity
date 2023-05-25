@@ -1407,6 +1407,8 @@ MonoBehaviour:
   - {fileID: 3755780182492977884, guid: 070eb337384f0df418d6bedb78f23eb8, type: 3}
   - {fileID: 5513898594519551758, guid: c72b745d870870449a680a1f1028c49f, type: 3}
   - {fileID: 3848082941480345286, guid: 5c95c64ad19737548bfae555fdcea292, type: 3}
+  - {fileID: 4281403616997772208, guid: a12d87a229ce38144bea45d5ce8f25c3, type: 3}
+  - {fileID: 23118720486236069, guid: e686c4066e51afa478e5343f8c6fc9b6, type: 3}
   m_ActualEnvironnement: {fileID: 0}
   moveEnvironmentSpeed: 10
   rangePunchPosition: 0.25
