@@ -74,6 +74,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private AudioClip m_Fight;
 
     public Player m_Player;
+    private Vector3 m_playerPos;
 
     //Singleton
     private void Awake()
@@ -216,6 +217,8 @@ public class GameManager : MonoBehaviour
         InitPlayerPrefAttack();
         
         m_Player = GameObject.Find("Player").GetComponent<Player>();
+        m_playerPos = m_Player.transform.position;
+
         SpawnEnnemy();
     }
 
@@ -482,10 +485,14 @@ public class GameManager : MonoBehaviour
         Txt_MoneyText.text = m_Money.ToString();
     }
 
+
     //Called every seconds to hit ennemy
     public void DamageEnnemy()
     {
-        m_ActualEnnemy.TakeDmg(m_Attack);
+        m_Player.transform.DOMove(m_ActualEnnemy.transform.position, 0.25f).OnComplete(() =>
+        {
+            m_Player.transform.DOMove(m_playerPos, 0.25f).OnComplete(() => m_ActualEnnemy.TakeDmg(m_Attack));
+        });
         
         m_enemyPunchTween.Complete();
         m_enemyPunchTween = m_ActualEnnemy.transform.DOPunchPosition(new Vector3(Random.Range(-rangePunchPosition, rangePunchPosition), m_ActualEnnemy.transform.position.y, Random.Range(-rangePunchPosition, rangePunchPosition)), 0.5f, 5);
