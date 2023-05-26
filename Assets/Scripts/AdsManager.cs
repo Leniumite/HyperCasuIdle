@@ -37,9 +37,8 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
     private void Start()
     {
 #if UNITY_ANDROID || UNITY_IOS
-        Advertisement.Initialize(GAME_ID, testMode, this);
         Advertisement.Banner.SetPosition(bannerPosition);
-        Advertisement.Banner.Load(PLACEMENTBANNER_ID);
+        Advertisement.Initialize(GAME_ID, testMode, this);
 #endif
 }
 
@@ -49,7 +48,8 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
 
     public void OnInitializationComplete()
     {
-        Advertisement.Load(PLACEMENT_ID, this);
+        LoadBanner();
+        LoadAdRewarded();
     }
     
     public void OnInitializationFailed(UnityAdsInitializationError error, string message) { }
@@ -94,10 +94,6 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
     
     public void OnUnityAdsAdLoaded(string placementId)
     {
-        if (placementId == PLACEMENTREWARDED_ID)
-        {
-            PlayAdsRewarded();
-        }
         // Optionally execute code if the Ad Unit successfully loads content.
     }
     
@@ -127,6 +123,7 @@ public class AdsManager : MonoBehaviour, IUnityAdsLoadListener, IUnityAdsShowLis
 
         if (placementId.Equals(PLACEMENTREWARDED_ID))
         {
+            LoadAdRewarded();
             if (showCompletionState.Equals(UnityAdsShowCompletionState.COMPLETED))
             {
                 OnShowAdsRewardedComplete?.Invoke();

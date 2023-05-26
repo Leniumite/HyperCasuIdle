@@ -21,6 +21,8 @@ public class GameManager : MonoBehaviour
     private int m_StageNumber = 1, m_EnnemiesKilled = 0, m_EnnemiesBeforeStage = 10;
     private int m_environmentId;
     private float m_Speed = 0.5f, m_Attack = 1, m_MoneyToUpgradeSpeed = 10, m_MoneyToUpgradeArmor = 10, m_MoneyToUpgradeAttack = 10;
+    [SerializeField] private int m_baseRewardMoney = 20;
+    private int m_currentRewardMoney;
     [SerializeField] private List<GameObject> m_EnvironnementPrefabs;
     [SerializeField] private Transform m_ActualEnvironnement;
     [SerializeField] private float moveEnvironmentSpeed = 0.25f;
@@ -97,17 +99,47 @@ public class GameManager : MonoBehaviour
         m_ActualBossTime = m_TimeToDefeatBoss + (m_LvlArmor/10);
         m_TimeBar.SetActive(false);
 
-        AdsManager.instance.LoadBanner();
-        AdsManager.instance.OnShowAdsRewardedComplete += () =>
-        {
-            m_Money += 20;
-            UpdateMoney();
-        };
+        AdsManager.instance.OnShowAdsRewardedComplete += () => RewardMoney();
         
-        Btn_MoneyReward.onClick.AddListener(() =>
+        Btn_MoneyReward.onClick.AddListener(() => AdsManager.instance.PlayAdsRewarded());
+    }
+
+    private void RewardMoney()
+    {
+        m_currentRewardMoney = m_baseRewardMoney * m_StageNumber;
+        m_Money += m_currentRewardMoney;
+            
+        _moneyTextTween = DOTween.Sequence();
+        var moneyTextScale = Txt_MoneyText.transform.localScale;
+        var reward = Mathf.Clamp(m_currentRewardMoney, 0, 50);
+        for (int i = 0; i < reward; i++)
         {
-            AdsManager.instance.LoadAdRewarded();
-        });
+            var randomPos = Random.insideUnitCircle * 200;
+            var moneyDropTemp = Instantiate(moneyPrefab, moneyDropParent);
+            var RectTransform = moneyDropTemp.GetComponent<RectTransform>();
+            RectTransform.anchoredPosition = randomPos;
+            var scaleRatio = Random.Range(1, 3);
+            RectTransform.localScale = new Vector3(scaleRatio, scaleRatio, scaleRatio);
+            var rotRatio = Random.Range(0, 360);
+            RectTransform.rotation = Quaternion.Euler(new Vector3(0, 0, rotRatio));;
+
+            moneyDropTemp.transform.DOMove(Txt_MoneyText.transform.position, Random.Range(0.25f, 1f)).SetEase(Ease.InOutSine)
+                .OnComplete(() =>
+                {
+                    if (!_moneyTextTween.IsPlaying())
+                    {
+                        _moneyTextTween.Append(Txt_MoneyText.transform.DOScale(Vector3.one * 1.25f, 0.1f).OnComplete(() =>
+                        {
+                            Txt_MoneyText.transform.localScale = moneyTextScale;
+                            _moneyTextTween.Kill();
+                        }));
+                    }
+
+                    Destroy(moneyDropTemp);
+                });
+        }
+
+        UpdateMoney();
     }
 
     //Spawn ennemies one by one
@@ -231,6 +263,10 @@ public class GameManager : MonoBehaviour
             {
                 Btn_Boss.interactable = true;
                 Txt_StepsToBoss.text = "BOSS";
+            }
+            else
+            {
+                Btn_Boss.interactable = false;
             }
         }
         
@@ -518,6 +554,9 @@ public class GameManager : MonoBehaviour
             m_ActualBossTime = m_TimeToDefeatBoss;
             b_canAttack = true;
             b_BossPhase = false;
+            b_BossLoose = false;
+            Btn_Boss.interactable = false;
+
             m_StageNumber += 1;
             Txt_StageStep.text = m_StageNumber.ToString();
 
@@ -533,16 +572,14 @@ public class GameManager : MonoBehaviour
             Txt_StepsToBoss.text = ((m_EnnemiesKilled % m_EnnemiesBeforeStage) + 1).ToString() + "/10";
 
             PlayerPrefs.SetInt("BossPhase", 0);
+            PlayerPrefs.SetInt("BossLoose", 0);
             PlayerPrefs.SetInt("Environment", m_environmentId);
             PlayerPrefs.SetInt("StageNumber", m_StageNumber);
             PlayerPrefs.SetInt("StepToBoss", m_EnnemiesKilled);
-
-            Btn_Boss.interactable = false;
         }
-        
-        MoveEnvironment();
-
         PlayerPrefs.Save();
+
+        MoveEnvironment();
     }
 
     //Mo$t important
