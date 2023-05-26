@@ -259,16 +259,9 @@ public class GameManager : MonoBehaviour
         {
             b_BossLoose = Convert.ToBoolean(PlayerPrefs.GetInt("BossLoose"));
 
-            if (b_BossLoose)
-            {
-                Btn_Boss.interactable = true;
-                Txt_StepsToBoss.text = "BOSS";
-            }
-            else
-            {
-                Btn_Boss.interactable = false;
-            }
+            if (b_BossLoose) Txt_StepsToBoss.text = "BOSS";
         }
+        Btn_Boss.interactable = b_BossLoose;
         
         InitPlayerPrefSpeed();
         InitPlayerPrefArmor();
